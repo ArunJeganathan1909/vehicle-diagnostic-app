@@ -1,24 +1,11 @@
 const router = require('express').Router();
 const verifyToken = require('../middleware/verifyToken');
-const User = require('../models/User');
+const { syncUser, getMe } = require('../controllers/authController');
 
-// Called after Google login — syncs user to MySQL
-router.post('/sync', verifyToken, async (req, res) => {
-    try {
-        const { uid, email, name, picture } = req.user;
+// POST /api/auth/sync — called after Google login to create/find user in MySQL
+router.post('/sync', verifyToken, syncUser);
 
-        const user = await User.findOrCreate({
-            firebase_uid: uid,
-            email: email,
-            display_name: name,
-            photo_url: picture,
-        });
-
-        res.json({ message: 'User synced successfully', user });
-    } catch (error) {
-        console.error('Auth sync error:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
+// GET /api/auth/me — get current user's DB record
+router.get('/me', verifyToken, getMe);
 
 module.exports = router;

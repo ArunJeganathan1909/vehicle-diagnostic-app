@@ -1,108 +1,131 @@
 from src.gemini import get_gemini_response
 import json
+import re
+
+def extract_vehicle_from_history(messages: list) -> dict:
+    """Scan previous bot messages for JSON containing vehicle info."""
+    vehicle_brand = None
+    vehicle_model = None
+    vehicle_year  = None
+
+    for msg in messages:
+        if msg.get("role") != "bot":
+            continue
+        content = msg.get("content", "")
+        try:
+            start = content.find("{")
+            end   = content.rfind("}") + 1
+            if start != -1 and end > start:
+                data = json.loads(content[start:end])
+                if data.get("vehicle_brand") and not vehicle_brand:
+                    vehicle_brand = data["vehicle_brand"]
+                if data.get("vehicle_model") and not vehicle_model:
+                    vehicle_model = data["vehicle_model"]
+                if data.get("vehicle_year") and not vehicle_year:
+                    vehicle_year = str(data["vehicle_year"])
+        except Exception:
+            pass
+
+    return {"vehicle_brand": vehicle_brand, "vehicle_model": vehicle_model, "vehicle_year": vehicle_year}
+
+
+def extract_from_user_messages(messages: list) -> dict:
+    """Extract brand/year directly from user messages as last resort."""
+    brands = ["toyota", "honda", "bmw", "ford", "nissan", "hyundai", "kia", "mazda",
+              "volkswagen", "vw", "audi", "mercedes", "chevrolet", "chevy",
+              "suzuki", "mitsubishi", "subaru", "lexus", "jeep", "tesla", "volvo"]
+
+    brand = None
+    year  = None
+
+    for msg in messages:
+        if msg.get("role") != "user":
+            continue
+        text = msg.get("content", "").lower()
+
+        if not brand:
+            for b in brands:
+                if b in text:
+                    brand = b.upper() if b in ["bmw", "vw"] else b.capitalize()
+                    break
+
+        if not year:
+            match = re.search(r'\b(19|20)\d{2}\b', text)
+            if match:
+                year = match.group()
+
+    return {"vehicle_brand": brand, "vehicle_year": year}
+
 
 def build_system_prompt(chat_state: dict, user_message: str) -> str:
-    """
-    Build the prompt for Gemini based on what info we have so far.
-    chat_state contains: vehicle_brand, vehicle_model, vehicle_year
-    """
-
     has_brand = chat_state.get("vehicle_brand")
     has_model = chat_state.get("vehicle_model")
-    has_year = chat_state.get("vehicle_year")
+    has_year  = chat_state.get("vehicle_year")
 
-    # Stage 1 - No vehicle info yet, ask for brand
     if not has_brand:
-        return f"""
-You are a vehicle diagnostic assistant. Your job is to help users diagnose vehicle issues.
+        return f"""You are a vehicle diagnostic assistant.
 
-The user just said: "{user_message}"
+The user said: "{user_message}"
 
-Extract the vehicle brand from their message if they mentioned one.
-If they mentioned a brand, confirm it warmly and ask for the vehicle model.
-If they did not mention a brand, politely ask: "What is the brand of your vehicle? (e.g., Toyota, Honda, BMW, Ford)"
+Extract the vehicle brand if mentioned (Toyota, Honda, BMW, Ford, etc).
+- Found: confirm warmly and ask for the model.
+- Not found: ask "What is the brand of your vehicle?"
 
-Respond in a friendly, conversational tone. Keep it short.
+Respond ONLY with valid JSON, no markdown:
+{{"reply": "your message", "vehicle_brand": "brand or null", "vehicle_model": null, "vehicle_year": null}}"""
 
-IMPORTANT: Respond ONLY with a JSON object like this:
-{{
-  "reply": "your message to the user",
-  "vehicle_brand": "extracted brand or null",
-  "vehicle_model": null,
-  "vehicle_year": null
-}}
-"""
+    if not has_model:
+        return f"""You are a vehicle diagnostic assistant.
+Brand confirmed: {has_brand}
 
-    # Stage 2 - Have brand, need model
-    if has_brand and not has_model:
-        return f"""
-You are a vehicle diagnostic assistant.
-We already know the vehicle brand is: {has_brand}
+The user said: "{user_message}"
 
-The user just said: "{user_message}"
+Extract the vehicle model (Corolla, Civic, 3 Series, X5, etc).
+- Found: confirm and ask for manufacturing year.
+- Not found: ask "What is the model of your {has_brand}?"
 
-Extract the vehicle model from their message if they mentioned one.
-If they mentioned a model, confirm it and ask for the manufacturing year.
-If they did not mention a model, politely ask: "What is the model of your {has_brand}? (e.g., Corolla, Civic, X5)"
+Respond ONLY with valid JSON, no markdown:
+{{"reply": "your message", "vehicle_brand": "{has_brand}", "vehicle_model": "model or null", "vehicle_year": null}}"""
 
-Respond in a friendly, conversational tone. Keep it short.
+    if not has_year:
+        return f"""You are a vehicle diagnostic assistant.
+Vehicle: {has_brand} {has_model}
 
-IMPORTANT: Respond ONLY with a JSON object like this:
-{{
-  "reply": "your message to the user",
-  "vehicle_brand": "{has_brand}",
-  "vehicle_model": "extracted model or null",
-  "vehicle_year": null
-}}
-"""
+The user said: "{user_message}"
 
-    # Stage 3 - Have brand and model, need year
-    if has_brand and has_model and not has_year:
-        return f"""
-You are a vehicle diagnostic assistant.
-We already know: {has_brand} {has_model}
+Extract the manufacturing year (4-digit number like 2007).
+- Found: confirm and ask what issue they are experiencing.
+- Not found: ask "What year was your {has_brand} {has_model} manufactured?"
 
-The user just said: "{user_message}"
+IMPORTANT: vehicle_year must be a STRING like "2007", not a number.
 
-Extract the manufacturing year from their message if they mentioned one.
-If they mentioned a year, confirm it and ask about their vehicle issue.
-If they did not mention a year, politely ask: "What year was your {has_brand} {has_model} manufactured?"
+Respond ONLY with valid JSON, no markdown:
+{{"reply": "your message", "vehicle_brand": "{has_brand}", "vehicle_model": "{has_model}", "vehicle_year": "year as string or null"}}"""
 
-Respond in a friendly, conversational tone. Keep it short.
+    return f"""You are an expert vehicle diagnostic assistant with deep knowledge of common issues for specific makes, models and years.
+Vehicle: {has_year} {has_brand} {has_model}
 
-IMPORTANT: Respond ONLY with a JSON object like this:
-{{
-  "reply": "your message to the user",
-  "vehicle_brand": "{has_brand}",
-  "vehicle_model": "{has_model}",
-  "vehicle_year": "extracted year or null"
-}}
-"""
+The user said: "{user_message}"
 
-    # Stage 4 - Have all vehicle info, diagnose the issue
-    if has_brand and has_model and has_year:
-        return f"""
-You are an expert vehicle diagnostic assistant.
-The user's vehicle is: {has_year} {has_brand} {has_model}
+If they are describing a problem, provide a thorough diagnosis structured like this:
+1. MOST LIKELY ROOT CAUSE — identify the single most probable cause that explains all symptoms together. Name the exact component (e.g. MAF sensor, VANOS solenoid, fuel pressure regulator).
+2. OTHER POSSIBLE CAUSES — list 2-3 secondary causes in order of likelihood.
+3. OBD2 FAULT CODES — mention the specific OBD2 codes likely triggered (e.g. P0101, P0171) and recommend scanning before replacing any parts.
+4. RECOMMENDED FIX — step by step: what to try first (cheapest/easiest), what to do if that fails.
+5. COST ESTIMATE — rough parts + labour cost in USD for each fix.
+6. URGENCY — Low / Medium / High and why.
+7. MECHANIC NEEDED — yes or no, and why.
 
-The user just said: "{user_message}"
+If it is a follow-up question, answer helpfully in context.
+If they say the issue is resolved, thank them warmly.
 
-Analyze their message:
-- If they are describing a vehicle issue or problem, provide a detailed diagnosis and solution.
-  Include: possible causes, recommended fixes, urgency level, and whether they need a mechanic.
-- If they are asking a follow-up question about the same vehicle, answer helpfully.
-- If they say the issue is resolved or say goodbye, thank them warmly.
+Use simple, clear language. Be specific to the {has_year} {has_brand} {has_model} — mention known issues for this exact vehicle if relevant.
 
-Be thorough but easy to understand. Use simple language.
+IMPORTANT: vehicle_year must be a STRING like "{has_year}".
 
-IMPORTANT: Respond ONLY with a JSON object like this:
-{{
-  "reply": "your detailed diagnosis and solution message",
-  "vehicle_brand": "{has_brand}",
-  "vehicle_model": "{has_model}",
-  "vehicle_year": "{has_year}"
-}}
-"""
+Respond ONLY with valid JSON, no markdown:
+{{"reply": "your detailed structured response", "vehicle_brand": "{has_brand}", "vehicle_model": "{has_model}", "vehicle_year": "{has_year}"}}"""
+
 
 def process_message(
     chat_id: int,
@@ -112,62 +135,84 @@ def process_message(
     vehicle_year: str,
     messages: list
 ) -> dict:
-    """
-    Main function — processes user message and returns bot reply + vehicle info
-    """
 
-    # Current state of vehicle info
+    # Start with DB values
     chat_state = {
         "vehicle_brand": vehicle_brand,
         "vehicle_model": vehicle_model,
-        "vehicle_year": vehicle_year,
+        "vehicle_year":  str(vehicle_year) if vehicle_year else None,
     }
 
-    # Build conversation history for Gemini
-    # Convert our DB messages to Gemini format
-    gemini_history = []
-    for msg in messages[:-1]:  # exclude the latest user message (we send it separately)
-        if msg["role"] == "user":
-            gemini_history.append({
-                "role": "user",
-                "parts": [{"text": msg["content"]}]
-            })
-        elif msg["role"] == "bot":
-            gemini_history.append({
-                "role": "model",
-                "parts": [{"text": msg["content"]}]
-            })
+    # Fallback 1: extract from previous bot JSON responses
+    if not all([chat_state["vehicle_brand"], chat_state["vehicle_model"], chat_state["vehicle_year"]]):
+        from_history = extract_vehicle_from_history(messages)
+        chat_state["vehicle_brand"] = chat_state["vehicle_brand"] or from_history["vehicle_brand"]
+        chat_state["vehicle_model"] = chat_state["vehicle_model"] or from_history["vehicle_model"]
+        chat_state["vehicle_year"]  = chat_state["vehicle_year"]  or from_history["vehicle_year"]
 
-    # Build the system prompt based on current stage
+    # Fallback 2: extract brand/year from raw user messages
+    if not chat_state["vehicle_brand"] or not chat_state["vehicle_year"]:
+        from_users = extract_from_user_messages(messages)
+        chat_state["vehicle_brand"] = chat_state["vehicle_brand"] or from_users["vehicle_brand"]
+        chat_state["vehicle_year"]  = chat_state["vehicle_year"]  or from_users["vehicle_year"]
+
+    print(f"\n🔄 Processing message for Chat [{chat_id}]")
+    print(f"   State   : brand={chat_state['vehicle_brand']}, model={chat_state['vehicle_model']}, year={chat_state['vehicle_year']}")
+    print(f"   Message : {user_message}")
+
+    # Build Groq conversation history (all except the latest user message)
+    groq_history = []
+    for msg in messages[:-1]:
+        role = "user" if msg["role"] == "user" else "model"
+        groq_history.append({
+            "role": role,
+            "parts": [{"text": msg["content"]}]
+        })
+
     system_prompt = build_system_prompt(chat_state, user_message)
+    raw_response  = get_gemini_response(system_prompt, groq_history)
 
-    # Get Gemini response
-    raw_response = get_gemini_response(system_prompt, gemini_history)
-
-    # Parse the JSON response from Gemini
+    # Parse JSON response
     try:
-        # Clean response (sometimes Gemini adds ```json blocks)
         cleaned = raw_response.strip()
-        if cleaned.startswith("```"):
+
+        if "```" in cleaned:
             cleaned = cleaned.split("```")[1]
             if cleaned.startswith("json"):
                 cleaned = cleaned[4:]
-        cleaned = cleaned.strip()
+            cleaned = cleaned.strip()
+
+        start = cleaned.find("{")
+        end   = cleaned.rfind("}") + 1
+        if start != -1 and end > start:
+            cleaned = cleaned[start:end]
 
         result = json.loads(cleaned)
 
+        # ✅ Always keep known values — never overwrite with null
+        final_brand = result.get("vehicle_brand") or chat_state["vehicle_brand"]
+        final_model = result.get("vehicle_model") or chat_state["vehicle_model"]
+        final_year  = result.get("vehicle_year")  or chat_state["vehicle_year"]
+
+        # ✅ Always cast year to string
+        if final_year is not None:
+            final_year = str(final_year)
+
+        print(f"✅ Parsed reply: {result.get('reply', '')[:80]}...")
+        print(f"   Final state : brand={final_brand}, model={final_model}, year={final_year}")
+
         return {
-            "reply": result.get("reply", "I didn't understand that. Could you please repeat?"),
-            "vehicle_brand": result.get("vehicle_brand"),
-            "vehicle_model": result.get("vehicle_model"),
-            "vehicle_year": result.get("vehicle_year"),
+            "reply":         result.get("reply", "I didn't understand that. Could you please repeat?"),
+            "vehicle_brand": final_brand,
+            "vehicle_model": final_model,
+            "vehicle_year":  final_year,
         }
 
-    except json.JSONDecodeError:
-        # If Gemini didn't return valid JSON, use the raw text as reply
+    except json.JSONDecodeError as e:
+        print(f"⚠️  JSON parse failed ({e}) — using raw response")
         return {
-            "reply": raw_response,
-            "vehicle_brand": vehicle_brand,
-            "vehicle_model": vehicle_model,
-            "vehicle_year": vehicle_year,
+            "reply":         raw_response,
+            "vehicle_brand": chat_state["vehicle_brand"],
+            "vehicle_model": chat_state["vehicle_model"],
+            "vehicle_year":  str(chat_state["vehicle_year"]) if chat_state["vehicle_year"] else None,
         }

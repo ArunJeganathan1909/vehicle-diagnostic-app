@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { getChat, sendMessage, resolveChat } from '@/src/lib/api';
+import { getChat, sendMessage, resolveChat } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 export default function ChatPage() {
