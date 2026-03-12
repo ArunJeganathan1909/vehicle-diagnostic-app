@@ -1,21 +1,20 @@
-const Chat = require('../models/Chat');
+const Chat    = require('../models/Chat');
 const Message = require('../models/Message');
-const axios = require('axios');
+const axios   = require('axios');
 
 // POST /api/messages
 const sendMessage = async (req, res) => {
     try {
-        const { chat_id, content } = req.body;
+        const { chat_id, content, image_base64, image_media_type } = req.body;
 
-        if (!chat_id || !content) {
-            return res.status(400).json({ message: 'chat_id and content are required' });
+        if (!chat_id || (!content && !image_base64)) {
+            return res.status(400).json({ message: 'chat_id and content or image are required' });
         }
 
         const chat = await Chat.findById(chat_id);
         if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
-        // Save user message
-        const userMessage = await Message.create(chat_id, 'user', content);
+        const userMessage = await Message.create(chat_id, 'user', content || '[Image uploaded]');
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('💬  USER MESSAGE SAVED');
@@ -23,26 +22,26 @@ const sendMessage = async (req, res) => {
         console.log('  Message ID :', userMessage.id);
         console.log('  Chat ID    :', chat_id);
         console.log('  Content    :', userMessage.content);
+        console.log('  Has Image  :', image_base64 ? 'yes' : 'no');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         const allMessages = await Message.findByChatId(chat_id);
 
-        console.log(`🤖 Sending to AI service — Chat [${chat_id}], ${allMessages.length} message(s) in history...`);
+        console.log(`🤖 Sending to AI — Chat [${chat_id}], ${allMessages.length} message(s)${image_base64 ? ', with image' : ''}...`);
 
         const aiResponse = await axios.post('http://localhost:8000/chat', {
             chat_id,
-            vehicle_brand: chat.vehicle_brand,
-            vehicle_model: chat.vehicle_model,
-            vehicle_year:  chat.vehicle_year,
-            messages: allMessages.map((m) => ({
-                role:    m.role,
-                content: m.content,
-            })),
+            vehicle_brand:    chat.vehicle_brand,
+            vehicle_model:    chat.vehicle_model,
+            vehicle_year:     chat.vehicle_year,
+            messages:         allMessages.map(m => ({ role: m.role, content: m.content })),
+            image_base64:     image_base64     || null,
+            image_media_type: image_media_type || 'image/jpeg',
         });
 
         const { reply, vehicle_brand, vehicle_model, vehicle_year } = aiResponse.data;
 
-        // ✅ Fix: update vehicle info whenever ANY new field is returned
+        // Update vehicle info whenever any new field is returned
         const needsUpdate =
             (vehicle_brand && vehicle_brand !== chat.vehicle_brand) ||
             (vehicle_model && vehicle_model !== chat.vehicle_model) ||
@@ -58,10 +57,9 @@ const sendMessage = async (req, res) => {
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             console.log('🚘  VEHICLE INFO UPDATED');
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('  Chat ID :', chat_id);
-            console.log('  Brand   :', vehicle_brand || chat.vehicle_brand);
-            console.log('  Model   :', vehicle_model || chat.vehicle_model);
-            console.log('  Year    :', vehicle_year  || chat.vehicle_year);
+            console.log('  Brand :', vehicle_brand || chat.vehicle_brand);
+            console.log('  Model :', vehicle_model || chat.vehicle_model);
+            console.log('  Year  :', vehicle_year  || chat.vehicle_year);
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         }
 
@@ -77,7 +75,7 @@ const sendMessage = async (req, res) => {
         res.status(201).json({ message: 'Message sent successfully', userMessage, botMessage });
 
     } catch (error) {
-        console.error('❌ Send message error:', error);
+        console.error('❌ Send message error:', error.message);
         res.status(500).json({ message: 'Server error' });
     }
 };

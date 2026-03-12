@@ -1,0 +1,126 @@
+/* ── Markdown body inside bot bubbles ── */
+.markdown-body {
+    color: #f0f0f8;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.markdown-body p {
+    margin: 0 0 10px 0;
+}
+.markdown-body p:last-child {
+    margin-bottom: 0;
+}
+
+.markdown-body strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.markdown-body em {
+    color: #c4b5fd;
+    font-style: italic;
+}
+
+/* Numbered and bullet lists */
+.markdown-body ol,
+.markdown-body ul {
+    margin: 8px 0 10px 0;
+    padding-left: 20px;
+}
+.markdown-body li {
+    margin-bottom: 6px;
+    color: #e0e0f0;
+}
+.markdown-body li::marker {
+    color: #6c63ff;
+    font-weight: 700;
+}
+
+/* Headings inside bot messages */
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+    color: #ffffff;
+    font-family: 'Syne', sans-serif;
+    margin: 14px 0 6px 0;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+.markdown-body h1 { font-size: 17px; }
+.markdown-body h2 { font-size: 15px; }
+.markdown-body h3 { font-size: 14px; color: #a89fff; }
+
+/* Inline code */
+.markdown-body code {
+    background: rgba(108,99,255,0.15);
+    border: 1px solid rgba(108,99,255,0.25);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 12px;
+    color: #c4b5fd;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Code block */
+.markdown-body pre {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+.markdown-body pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #e0e0f0;
+}
+
+/* Blockquote — used for urgency / important notes */
+.markdown-body blockquote {
+    border-left: 3px solid #6c63ff;
+    margin: 10px 0;
+    padding: 8px 14px;
+    background: rgba(108,99,255,0.08);
+    border-radius: 0 8px 8px 0;
+    color: #c4b5fd;
+}
+
+/* Horizontal rule */
+.markdown-body hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin: 12px 0;
+}
+
+/* Tables */
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13px;
+}
+.markdown-body th {
+    background: rgba(108,99,255,0.15);
+    color: #a89fff;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(108,99,255,0.25);
+}
+.markdown-body td {
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #e0e0f0;
+}
+.markdown-body tr:last-child td {
+    border-bottom: none;
+}
+
+/* Fade in animation for severity badge */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}

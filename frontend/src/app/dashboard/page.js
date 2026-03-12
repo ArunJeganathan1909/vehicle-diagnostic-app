@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { getChats, createChat, deleteChat } from '@/lib/api';
+import Sidebar from '@/components/Sidebar';
+import { useAuth } from '@/context/AuthContext';
+import { createChat } from '@/lib/api';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
@@ -17,322 +17,205 @@ export default function DashboardPage() {
 }
 
 function Dashboard() {
-    const { user, logout } = useAuth();
+    const { user }          = useAuth();
+    const router            = useRouter();
     const [chats, setChats] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
-    const router = useRouter();
-
-    useEffect(() => {
-        loadChats();
-    }, []);
-
-    const loadChats = async () => {
-        try {
-            const res = await getChats();
-            setChats(res.data.chats);
-        } catch (err) {
-            toast.error('Failed to load chats');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleNewChat = async () => {
         setCreating(true);
         try {
             const res = await createChat();
             router.push(`/chat/${res.data.chat.id}`);
-        } catch (err) {
+        } catch {
             toast.error('Failed to create new chat');
             setCreating(false);
         }
     };
 
-    const handleDeleteChat = async (e, chatId) => {
-        e.stopPropagation();
-        if (!confirm('Delete this chat?')) return;
-        try {
-            await deleteChat(chatId);
-            setChats((prev) => prev.filter((c) => c.id !== chatId));
-            toast.success('Chat deleted');
-        } catch (err) {
-            toast.error('Failed to delete chat');
-        }
-    };
-
     const formatDate = (dateStr) => {
-        const d = new Date(dateStr);
+        const d   = new Date(dateStr);
         const now = new Date();
         const diff = now - d;
-        if (diff < 60000) return 'Just now';
-        if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+        if (diff < 60000)     return 'Just now';
+        if (diff < 3600000)   return `${Math.floor(diff / 60000)}m ago`;
+        if (diff < 86400000)  return `${Math.floor(diff / 3600000)}h ago`;
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
     return (
-        <div style={{ minHeight: '100vh', background: '#09090f', display: 'flex', flexDirection: 'column' }}>
-            {/* Header */}
-            <header style={{
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-                padding: '0 32px',
-                height: '64px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                position: 'sticky', top: 0, zIndex: 10,
-                background: 'rgba(9,9,15,0.9)',
-                backdropFilter: 'blur(12px)',
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '22px' }}>🔧</span>
-                    <span style={{ fontFamily: 'Syne, sans-serif', fontSize: '18px', fontWeight: 700, color: '#f0f0f8' }}>
-            AutoDiag
-          </span>
-                </div>
+        <div style={{ display: 'flex', minHeight: '100vh', background: '#09090f' }}>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {user?.photoURL ? (
-                            <Image
-                                src={user.photoURL}
-                                alt="avatar"
-                                width={32}
-                                height={32}
-                                style={{ borderRadius: '50%', border: '2px solid rgba(108,99,255,0.4)' }}
-                            />
-                        ) : (
-                            <div style={{
-                                width: '32px', height: '32px', borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #6c63ff, #a855f7)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '13px', fontWeight: 700,
-                            }}>
-                                {user?.displayName?.[0] || user?.email?.[0] || 'U'}
-                            </div>
-                        )}
-                        <span style={{ color: '#7a7a9a', fontSize: '14px' }}>
-              {user?.displayName || user?.email}
-            </span>
-                    </div>
+            {/* ── Sidebar ── */}
+            <Sidebar onChatsLoaded={setChats} />
 
-                    <button
-                        onClick={logout}
-                        style={{
-                            padding: '7px 16px', borderRadius: '8px',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            background: 'transparent', color: '#7a7a9a',
-                            fontSize: '13px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.color = '#f0f0f8'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#7a7a9a'; }}
-                    >
-                        Sign out
-                    </button>
-                </div>
-            </header>
+            {/* ── Main content ── */}
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
-            {/* Main */}
-            <main style={{ flex: 1, padding: '48px 32px', maxWidth: '900px', width: '100%', margin: '0 auto' }}>
-                {/* Page title + New Chat button */}
-                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '40px' }}>
+                {/* Header */}
+                <header style={{
+                    height: '64px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    padding: '0 32px', display: 'flex', alignItems: 'center',
+                    justifyContent: 'space-between', flexShrink: 0,
+                    background: 'rgba(9,9,15,0.9)', backdropFilter: 'blur(12px)',
+                    position: 'sticky', top: 0, zIndex: 10,
+                }}>
                     <div>
                         <h1 style={{
-                            fontFamily: 'Syne, sans-serif',
-                            fontSize: '36px', fontWeight: 800,
-                            color: '#f0f0f8',
-                            letterSpacing: '-0.03em',
-                            marginBottom: '6px',
-                        }}>
-                            My Diagnostics
-                        </h1>
-                        <p style={{ color: '#7a7a9a', fontSize: '14px' }}>
-                            {chats.length} chat{chats.length !== 1 ? 's' : ''} · each chat is one vehicle
+                            fontFamily: 'Syne, sans-serif', fontSize: '18px',
+                            fontWeight: 800, color: '#f0f0f8', letterSpacing: '-0.02em',
+                        }}>My Diagnostics</h1>
+                        <p style={{ color: '#4a4a6a', fontSize: '12px' }}>
+                            {chats.length} chat{chats.length !== 1 ? 's' : ''}
                         </p>
                     </div>
 
-                    <button
-                        onClick={handleNewChat}
-                        disabled={creating}
-                        style={{
-                            padding: '12px 24px',
-                            borderRadius: '12px',
-                            border: 'none',
-                            background: creating
-                                ? 'rgba(108,99,255,0.4)'
-                                : 'linear-gradient(135deg, #6c63ff, #a855f7)',
-                            color: '#fff',
-                            fontSize: '14px', fontWeight: 600,
-                            fontFamily: 'Syne, sans-serif',
-                            cursor: creating ? 'not-allowed' : 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            transition: 'all 0.2s',
-                            boxShadow: creating ? 'none' : '0 0 24px rgba(108,99,255,0.3)',
-                        }}
-                        onMouseEnter={(e) => { if (!creating) e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
+                    <button onClick={handleNewChat} disabled={creating} style={{
+                        padding: '10px 20px', borderRadius: '10px', border: 'none',
+                        background: creating
+                            ? 'rgba(108,99,255,0.4)'
+                            : 'linear-gradient(135deg, #6c63ff, #a855f7)',
+                        color: '#fff', fontSize: '13px', fontWeight: 600,
+                        fontFamily: 'Syne, sans-serif',
+                        cursor: creating ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                        transition: 'all 0.2s',
+                        boxShadow: creating ? 'none' : '0 0 20px rgba(108,99,255,0.25)',
+                    }}
+                            onMouseEnter={e => { if (!creating) e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
                     >
                         {creating ? (
-                            <>
-                                <span style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.6s linear infinite' }} />
-                                Creating...
-                            </>
-                        ) : (
-                            <>+ New Diagnostic</>
-                        )}
+                            <><span style={{ width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.6s linear infinite' }} /> Creating...</>
+                        ) : '+ New Diagnostic'}
                     </button>
-                </div>
+                </header>
 
-                {/* Chat list */}
-                {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '80px' }}>
-                        <div className="loader" />
-                    </div>
-                ) : chats.length === 0 ? (
-                    <EmptyState onNew={handleNewChat} />
-                ) : (
-                    <div style={{ display: 'grid', gap: '12px' }}>
-                        {chats.map((chat, i) => (
-                            <div
-                                key={chat.id}
-                                className="fade-up"
-                                style={{ animationDelay: `${i * 0.05}s`, opacity: 0 }}
-                                onClick={() => router.push(`/chat/${chat.id}`)}
-                            >
-                                <ChatCard chat={chat} onDelete={handleDeleteChat} formatDate={formatDate} />
+                {/* Content */}
+                <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+                    {chats.length === 0 ? (
+                        <EmptyState onNew={handleNewChat} />
+                    ) : (
+                        <>
+                            {/* Stats row */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '32px' }}>
+                                {[
+                                    { label: 'Total Chats',    value: chats.length,                                   icon: '💬' },
+                                    { label: 'Active',         value: chats.filter(c => c.status !== 'resolved').length, icon: '🔴' },
+                                    { label: 'Resolved',       value: chats.filter(c => c.status === 'resolved').length, icon: '✅' },
+                                ].map(stat => (
+                                    <div key={stat.label} style={{
+                                        background: '#0e0e17', border: '1px solid rgba(255,255,255,0.06)',
+                                        borderRadius: '12px', padding: '16px 20px',
+                                        display: 'flex', alignItems: 'center', gap: '12px',
+                                    }}>
+                                        <span style={{ fontSize: '22px' }}>{stat.icon}</span>
+                                        <div>
+                                            <div style={{ fontSize: '22px', fontWeight: 800, color: '#f0f0f8', fontFamily: 'Syne, sans-serif' }}>{stat.value}</div>
+                                            <div style={{ fontSize: '11px', color: '#4a4a6a', fontWeight: 500 }}>{stat.label}</div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                )}
+
+                            {/* Chat grid */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                                {chats.map((chat, i) => (
+                                    <ChatCard
+                                        key={chat.id}
+                                        chat={chat}
+                                        formatDate={formatDate}
+                                        onClick={() => router.push(`/chat/${chat.id}`)}
+                                        style={{ animationDelay: `${i * 0.04}s` }}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
             </main>
         </div>
     );
 }
 
-function ChatCard({ chat, onDelete, formatDate }) {
+function ChatCard({ chat, formatDate, onClick }) {
     const [hovered, setHovered] = useState(false);
 
+    const vehicleLabel = chat.vehicle_brand
+        ? `${chat.vehicle_year || ''} ${chat.vehicle_brand} ${chat.vehicle_model || ''}`.trim()
+        : null;
+
     return (
-        <div
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            style={{
-                background: hovered ? '#111119' : '#0e0e17',
-                border: `1px solid ${hovered ? 'rgba(108,99,255,0.25)' : 'rgba(255,255,255,0.06)'}`,
-                borderRadius: '16px',
-                padding: '20px 24px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '16px',
-            }}
+        <div onClick={onClick}
+             onMouseEnter={() => setHovered(true)}
+             onMouseLeave={() => setHovered(false)}
+             style={{
+                 background: hovered ? '#111119' : '#0e0e17',
+                 border: `1px solid ${hovered ? 'rgba(108,99,255,0.25)' : 'rgba(255,255,255,0.06)'}`,
+                 borderRadius: '14px', padding: '18px', cursor: 'pointer',
+                 transition: 'all 0.2s ease',
+                 transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+                 boxShadow: hovered ? '0 8px 32px rgba(0,0,0,0.3)' : 'none',
+             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
-                {/* Vehicle icon */}
+            {/* Icon + status */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <div style={{
-                    width: '48px', height: '48px', borderRadius: '12px', flexShrink: 0,
+                    width: '40px', height: '40px', borderRadius: '10px',
                     background: chat.vehicle_brand
                         ? 'linear-gradient(135deg, rgba(108,99,255,0.2), rgba(168,85,247,0.2))'
                         : 'rgba(255,255,255,0.04)',
                     border: '1px solid rgba(108,99,255,0.2)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '22px',
-                }}>
-                    🚗
-                </div>
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
+                }}>🚗</div>
 
-                <div style={{ minWidth: 0, flex: 1 }}>
-                    <h3 style={{
-                        fontFamily: 'Syne, sans-serif',
-                        fontSize: '16px', fontWeight: 700,
-                        color: '#f0f0f8',
-                        marginBottom: '4px',
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    }}>
-                        {chat.title || 'New Vehicle Chat'}
-                    </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{
-                padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 500,
-                background: chat.status === 'resolved' ? 'rgba(34,197,94,0.12)' : 'rgba(108,99,255,0.12)',
-                color: chat.status === 'resolved' ? '#22c55e' : '#a89fff',
-                border: `1px solid ${chat.status === 'resolved' ? 'rgba(34,197,94,0.2)' : 'rgba(108,99,255,0.2)'}`,
-            }}>
-              {chat.status === 'resolved' ? '✓ Resolved' : '● Active'}
-            </span>
-                        <span style={{ color: '#4a4a6a', fontSize: '12px' }}>
-              {formatDate(chat.created_at)}
-            </span>
-                    </div>
-                </div>
+                <span style={{
+                    padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 600,
+                    background: chat.status === 'resolved' ? 'rgba(34,197,94,0.12)' : 'rgba(108,99,255,0.12)',
+                    color: chat.status === 'resolved' ? '#22c55e' : '#a89fff',
+                    border: `1px solid ${chat.status === 'resolved' ? 'rgba(34,197,94,0.2)' : 'rgba(108,99,255,0.2)'}`,
+                }}>
+                    {chat.status === 'resolved' ? '✓ Resolved' : '● Active'}
+                </span>
             </div>
 
-            {/* Delete button */}
-            <button
-                onClick={(e) => onDelete(e, chat.id)}
-                style={{
-                    width: '32px', height: '32px', borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    background: 'transparent', color: '#4a4a6a',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.2s', flexShrink: 0,
-                    opacity: hovered ? 1 : 0,
-                    fontSize: '14px',
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
-                    e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
-                    e.currentTarget.style.color = '#ef4444';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-                    e.currentTarget.style.color = '#4a4a6a';
-                }}
-            >
-                ✕
-            </button>
+            {/* Title */}
+            <div style={{
+                fontFamily: 'Syne, sans-serif', fontSize: '14px', fontWeight: 700,
+                color: '#f0f0f8', marginBottom: '4px',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+                {vehicleLabel || chat.title || 'New Vehicle Chat'}
+            </div>
+
+            <div style={{ fontSize: '11px', color: '#4a4a6a' }}>
+                {formatDate(chat.created_at)}
+            </div>
         </div>
     );
 }
 
 function EmptyState({ onNew }) {
     return (
-        <div style={{
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            paddingTop: '80px', textAlign: 'center',
-        }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '80px', textAlign: 'center' }}>
             <div style={{
-                width: '96px', height: '96px', borderRadius: '24px',
-                background: 'rgba(108,99,255,0.08)',
-                border: '1px solid rgba(108,99,255,0.15)',
+                width: '80px', height: '80px', borderRadius: '20px',
+                background: 'rgba(108,99,255,0.08)', border: '1px solid rgba(108,99,255,0.15)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '40px', marginBottom: '24px',
-            }}>
-                🔧
-            </div>
-            <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: '22px', fontWeight: 700, color: '#f0f0f8', marginBottom: '10px' }}>
+                fontSize: '36px', marginBottom: '20px',
+            }}>🔧</div>
+            <h3 style={{ fontFamily: 'Syne, sans-serif', fontSize: '20px', fontWeight: 700, color: '#f0f0f8', marginBottom: '8px' }}>
                 No diagnostics yet
             </h3>
-            <p style={{ color: '#7a7a9a', marginBottom: '32px', maxWidth: '320px', fontSize: '14px', lineHeight: 1.6 }}>
-                Start a new diagnostic session for your vehicle. Our AI will guide you through the process.
+            <p style={{ color: '#7a7a9a', marginBottom: '28px', maxWidth: '300px', fontSize: '13px', lineHeight: 1.6 }}>
+                Start a new session and our AI will guide you through diagnosing your vehicle.
             </p>
-            <button
-                onClick={onNew}
-                style={{
-                    padding: '12px 28px', borderRadius: '12px', border: 'none',
-                    background: 'linear-gradient(135deg, #6c63ff, #a855f7)',
-                    color: '#fff', fontSize: '14px', fontWeight: 600,
-                    fontFamily: 'Syne, sans-serif', cursor: 'pointer',
-                }}
-            >
-                + Start First Diagnostic
-            </button>
+            <button onClick={onNew} style={{
+                padding: '11px 24px', borderRadius: '10px', border: 'none',
+                background: 'linear-gradient(135deg, #6c63ff, #a855f7)',
+                color: '#fff', fontSize: '13px', fontWeight: 600,
+                fontFamily: 'Syne, sans-serif', cursor: 'pointer',
+            }}>+ Start First Diagnostic</button>
         </div>
     );
 }

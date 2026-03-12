@@ -18,16 +18,18 @@ app.add_middleware(
 
 class MessageRequest(BaseModel):
     chat_id: int
-    vehicle_brand: Optional[str] = None
-    vehicle_model: Optional[str] = None
-    vehicle_year: Optional[str] = None
-    messages: List[dict]
+    vehicle_brand:    Optional[str] = None
+    vehicle_model:    Optional[str] = None
+    vehicle_year:     Optional[str] = None
+    messages:         List[dict]
+    image_base64:     Optional[str] = None   # ✅ base64 image from frontend
+    image_media_type: Optional[str] = "image/jpeg"
 
 class MessageResponse(BaseModel):
-    reply: str
+    reply:         str
     vehicle_brand: Optional[str] = None
     vehicle_model: Optional[str] = None
-    vehicle_year: Optional[str] = None  # always string
+    vehicle_year:  Optional[str] = None
 
 @app.get("/")
 def root():
@@ -49,9 +51,11 @@ async def chat(request: MessageRequest):
             vehicle_model=request.vehicle_model,
             vehicle_year=request.vehicle_year,
             messages=request.messages,
+            image_base64=request.image_base64,
+            image_media_type=request.image_media_type or "image/jpeg",
         )
 
-        # ✅ Fix: always cast vehicle_year to string to avoid FastAPI validation error
+        # Always cast vehicle_year to string
         if result.get("vehicle_year") is not None:
             result["vehicle_year"] = str(result["vehicle_year"])
 
