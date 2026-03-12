@@ -7,32 +7,44 @@
 }
 
 :root {
-  --bg: #09090f;
-  --bg2: #111119;
-  --bg3: #1a1a26;
-  --border: rgba(255,255,255,0.08);
+  --bg:           #09090f;
+  --bg2:          #111119;
+  --sidebar-bg:   #0a0a12;
+  --border:       rgba(255,255,255,0.06);
   --border-hover: rgba(255,255,255,0.18);
-  --text: #f0f0f8;
-  --text-muted: #7a7a9a;
-  --text-dim: #4a4a6a;
-  --accent: #6c63ff;
-  --accent2: #a855f7;
-  --accent-glow: rgba(108, 99, 255, 0.25);
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --user-bubble: #1e1e32;
-  --bot-bubble: #13131f;
+  --text:         #f0f0f8;
+  --text-muted:   #7a7a9a;
+  --text-dim:     #4a4a6a;
+  --accent:       #6c63ff;
+  --accent2:      #a855f7;
+  --accent-glow:  rgba(108,99,255,0.25);
+  --success:      #22c55e;
+  --warning:      #f59e0b;
+  --danger:       #ef4444;
 }
 
-html, body {
+/* ── Reset browser defaults ── */
+html {
   height: 100%;
-  background: var(--bg);
-  color: var(--text);
+  background: #09090f;
+}
+
+body {
+  height: 100%;
+  min-height: 100vh;
+  background: #09090f !important;
+  color: #f0f0f8;
   font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* App Router mounts inside a div — make it fill too */
+body > div,
+body > div > div {
+  height: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -40,64 +52,258 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 4px; }
+/* ─────────────────────────────────────────
+   APP SHELL — outermost flex row
+───────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #09090f;
+}
 
-/* Loader spinner */
+/* ─────────────────────────────────────────
+   SIDEBAR
+   Three parts: header / list(scroll) / footer
+   Only .sidebar-chat-list scrolls.
+───────────────────────────────────────── */
+.sidebar {
+  flex-shrink: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0a0a12;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  z-index: 1;               /* sits behind nothing */
+}
+
+.sidebar-chat-list {
+  flex: 1 1 0;
+  min-height: 0;            /* ← must have this or flex ignores overflow */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 8px 8px;
+}
+
+/* ─────────────────────────────────────────
+   MAIN AREA — dashboard or chat, full height
+───────────────────────────────────────── */
+.page-main {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #09090f;
+}
+
+/* Shared sticky header bar */
+.page-header {
+  flex-shrink: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(9,9,15,0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Dashboard scrollable body */
+.page-content {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 28px;
+  background: #09090f;
+}
+
+/* ─────────────────────────────────────────
+   CHAT SHELL — fits inside page-main
+   header / messages(scroll) / input
+───────────────────────────────────────── */
+.chat-shell {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #09090f;
+}
+
+.chat-messages {
+  flex: 1 1 0;
+  min-height: 0;            /* ← critical */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 24px 16px;
+  background: #09090f;
+}
+
+.chat-input-bar {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 14px 20px 16px;
+  background: #0a0a12;
+}
+
+/* ─────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────── */
+::-webkit-scrollbar       { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(108,99,255,0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(108,99,255,0.45);
+}
+
+/* ─────────────────────────────────────────
+   LOADER
+───────────────────────────────────────── */
 .loader {
-  width: 36px;
-  height: 36px;
-  border: 2.5px solid var(--border);
-  border-top-color: var(--accent);
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255,255,255,0.06);
+  border-top-color: #6c63ff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
+/* ─────────────────────────────────────────
+   KEYFRAMES
+───────────────────────────────────────── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Fade in */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.fade-up {
-  animation: fadeUp 0.4s ease forwards;
-}
-
-/* Message bubble animation */
 @keyframes bubbleIn {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: scale(0.97) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
-
-.bubble-in {
-  animation: bubbleIn 0.3s ease forwards;
-}
-
-/* Glow pulse */
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
-  50% { box-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(108,99,255,0.1); }
-}
-
-/* Typing dots */
-.typing-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  animation: typingBounce 1.2s ease-in-out infinite;
-}
-
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes typingBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-6px); opacity: 1; }
+  0%, 60%, 100% { transform: translateY(0);   opacity: 0.35; }
+  30%           { transform: translateY(-5px); opacity: 1; }
 }
+
+.fade-up   { animation: fadeUp   0.35s ease forwards; }
+.bubble-in { animation: bubbleIn 0.25s ease forwards; }
+
+/* ─────────────────────────────────────────
+   TYPING DOTS
+───────────────────────────────────────── */
+.typing-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #6c63ff;
+  animation: typingBounce 1.2s ease-in-out infinite;
+  display: inline-block;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.18s; }
+.typing-dot:nth-child(3) { animation-delay: 0.36s; }
+
+/* ─────────────────────────────────────────
+   MARKDOWN — bot bubble content
+───────────────────────────────────────── */
+.markdown-body {
+  color: #f0f0f8;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.markdown-body p { margin: 0 0 10px; }
+.markdown-body p:last-child { margin-bottom: 0; }
+.markdown-body strong { color: #ffffff; font-weight: 700; }
+.markdown-body em { color: #c4b5fd; font-style: italic; }
+.markdown-body ol,
+.markdown-body ul {
+  margin: 8px 0 10px;
+  padding-left: 20px;
+}
+.markdown-body li { margin-bottom: 5px; color: #e0e0f0; }
+.markdown-body ul li::marker,
+.markdown-body ol li::marker { color: #6c63ff; font-weight: 700; }
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  font-family: 'Syne', sans-serif;
+  color: #ffffff;
+  margin: 14px 0 6px;
+  font-weight: 700;
+}
+.markdown-body h1 { font-size: 16px; }
+.markdown-body h2 { font-size: 15px; }
+.markdown-body h3 { font-size: 14px; color: #a89fff; }
+.markdown-body code {
+  background: rgba(108,99,255,0.14);
+  border: 1px solid rgba(108,99,255,0.22);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 12px;
+  color: #c4b5fd;
+  font-family: 'Courier New', monospace;
+}
+.markdown-body pre {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+.markdown-body pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #e0e0f0;
+}
+.markdown-body blockquote {
+  border-left: 3px solid #6c63ff;
+  margin: 10px 0;
+  padding: 8px 14px;
+  background: rgba(108,99,255,0.07);
+  border-radius: 0 8px 8px 0;
+  color: #c4b5fd;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin: 12px 0;
+}
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 13px;
+}
+.markdown-body th {
+  background: rgba(108,99,255,0.14);
+  color: #a89fff;
+  padding: 7px 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(108,99,255,0.22);
+}
+.markdown-body td {
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: #e0e0f0;
+}
+.markdown-body tr:last-child td { border-bottom: none; }

@@ -5,17 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4ea94320-7973-42bd-88ad-10138ceb9b8b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../ai-service/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/../ai-service/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ai-service/src/conversation.py" beforeDir="false" afterPath="$PROJECT_DIR$/../ai-service/src/conversation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ai-service/src/gemini.py" beforeDir="false" afterPath="$PROJECT_DIR$/../ai-service/src/gemini.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/controllers/messageController.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/controllers/messageController.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/[id]/page.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/[id]/page.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/globals.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/layout.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/layout.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/lib/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/lib/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/components/Sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/components/Sidebar.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -1,5 +1,6 @@
 import { AuthProvider } from '@/context/AuthContext';
 import '@/styles/markdown.css';
+import '@/app/globals.css'
 
 export const metadata = {
     title: "AutoDiag",
