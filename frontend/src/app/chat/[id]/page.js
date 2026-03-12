@@ -7,28 +7,25 @@ import Sidebar from '@/components/Sidebar';
 import { getChat, sendMessage, resolveChat } from '@/lib/api';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
+import s from '@/styles/Chat.module.css';
 
 export default function ChatPage() {
-    return (
-        <ProtectedRoute>
-            <ChatLayout />
-        </ProtectedRoute>
-    );
+    return <ProtectedRoute><ChatLayout /></ProtectedRoute>;
 }
 
 function ChatLayout() {
     const { id } = useParams();
     return (
-        <div className="app-shell">
+        <div className={s.shell}>
             <Sidebar activeChatId={id} />
-            <div className="chat-shell">
+            <div className={s.chatShell}>
                 <Chat id={id} />
             </div>
         </div>
     );
 }
 
-/* ── helpers ─────────────────────────────────────────────────── */
+/* ── helpers ── */
 function parseSeverity(content) {
     const l = content.toLowerCase();
     if (l.includes('urgency: high')   || l.includes('**high**'))   return 'high';
@@ -36,23 +33,22 @@ function parseSeverity(content) {
     if (l.includes('urgency: low')    || l.includes('**low**'))    return 'low';
     return null;
 }
-const SEV = {
-    high:   { bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.28)',  color: '#ef4444', label: '🔴 High Urgency'   },
-    medium: { bg: 'rgba(234,179,8,0.1)',  border: 'rgba(234,179,8,0.28)',  color: '#eab308', label: '🟡 Medium Urgency' },
-    low:    { bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.28)',  color: '#22c55e', label: '🟢 Low Urgency'    },
-};
+
+const SEV_CLASS = { high: s.sevHigh, medium: s.sevMedium, low: s.sevLow };
+const SEV_LABEL = { high: '🔴 High Urgency', medium: '🟡 Medium Urgency', low: '🟢 Low Urgency' };
+
 function toBase64(file) {
     return new Promise((res, rej) => {
         const r = new FileReader();
-        r.onload  = () => res(r.result);
+        r.onload = () => res(r.result);
         r.onerror = rej;
         r.readAsDataURL(file);
     });
 }
 
-/* ── Chat ─────────────────────────────────────────────────────── */
+/* ── Chat ── */
 function Chat({ id }) {
-    const router             = useRouter();
+    const router = useRouter();
     const [chat,         setChat]         = useState(null);
     const [messages,     setMessages]     = useState([]);
     const [input,        setInput]        = useState('');
@@ -60,6 +56,7 @@ function Chat({ id }) {
     const [loading,      setLoading]      = useState(true);
     const [imageFile,    setImageFile]    = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [focused,      setFocused]      = useState(false);
 
     const messagesEndRef = useRef(null);
     const inputRef       = useRef(null);
@@ -91,7 +88,7 @@ function Chat({ id }) {
         const file = e.target.files[0];
         if (!file) return;
         if (!file.type.startsWith('image/')) { toast.error('Please select an image'); return; }
-        if (file.size > 5 * 1024 * 1024)    { toast.error('Image must be under 5 MB'); return; }
+        if (file.size > 5 * 1024 * 1024)    { toast.error('Image must be under 5MB'); return; }
         setImageFile(file);
         setImagePreview(await toBase64(file));
     };
@@ -131,9 +128,7 @@ function Chat({ id }) {
         ]);
 
         try {
-            let imageBase64 = null;
-            if (capturedFile && capturedPreview) imageBase64 = capturedPreview.split(',')[1];
-
+            const imageBase64 = capturedFile && capturedPreview ? capturedPreview.split(',')[1] : null;
             const res = await sendMessage(parseInt(id), content, imageBase64, capturedFile?.type);
             const { userMessage, botMessage } = res.data;
 
@@ -165,64 +160,36 @@ function Chat({ id }) {
     };
 
     if (loading) return (
-        <div style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: '#09090f',
-        }}>
-            <div className="loader" />
-        </div>
+        <div className={s.loadingScreen}><div className="loader" /></div>
     );
 
     const vehicleLabel = chat?.vehicle_brand
         ? `${chat.vehicle_year || ''} ${chat.vehicle_brand} ${chat.vehicle_model || ''}`.trim()
         : null;
-    const resolved = chat?.status === 'resolved';
+    const resolved     = chat?.status === 'resolved';
+    const canSend      = (input.trim() || imageFile) && !sending && !resolved;
 
     return (
         <>
-            {/* ── HEADER — flex-shrink:0 (via page-header) ── */}
-            <header className="page-header">
-                <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{
-                        fontFamily: 'Syne, sans-serif', fontSize: '15px', fontWeight: 700,
-                        color: '#f0f0f8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    }}>
-                        {vehicleLabel || chat?.title || 'New Vehicle Chat'}
-                    </div>
-                    {vehicleLabel && (
-                        <div style={{ fontSize: '11px', color: '#7a7a9a', marginTop: '1px' }}>
-                            {vehicleLabel}
-                        </div>
-                    )}
+            {/* Header */}
+            <header className={s.header}>
+                <div className={s.headerLeft}>
+                    <div className={s.headerTitle}>{chat?.title || 'New Vehicle Chat'}</div>
+                    {vehicleLabel && <div className={s.headerSub}>{vehicleLabel}</div>}
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    <span style={{
-                        padding: '3px 9px', borderRadius: '7px', fontSize: '11px', fontWeight: 600,
-                        background: resolved ? 'rgba(34,197,94,0.1)' : 'rgba(108,99,255,0.1)',
-                        color:      resolved ? '#22c55e' : '#a89fff',
-                        border: `1px solid ${resolved ? 'rgba(34,197,94,0.2)' : 'rgba(108,99,255,0.2)'}`,
-                    }}>
+                <div className={s.headerRight}>
+                    <span className={`${s.statusBadge} ${resolved ? s.statusResolved : s.statusActive}`}>
                         {resolved ? '✓ Resolved' : '● Active'}
                     </span>
                     {!resolved && chat?.vehicle_brand && (
-                        <button onClick={handleResolve} style={{
-                            padding: '5px 11px', borderRadius: '8px',
-                            border: '1px solid rgba(34,197,94,0.25)',
-                            background: 'rgba(34,197,94,0.07)',
-                            color: '#22c55e', fontSize: '12px', fontWeight: 500,
-                            cursor: 'pointer', transition: 'background 0.2s',
-                        }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.14)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(34,197,94,0.07)'; }}
-                        >Mark Resolved</button>
+                        <button className={s.resolveBtn} onClick={handleResolve}>Mark Resolved</button>
                     )}
                 </div>
             </header>
 
-            {/* ── MESSAGES — flex:1 min-height:0 overflow-y:auto ── */}
-            <div className="chat-messages">
-                <div style={{ maxWidth: '720px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {/* Messages */}
+            <div className={s.messages}>
+                <div className={s.messagesInner}>
                     {messages.map((msg, i) => (
                         <MessageBubble key={msg.id} msg={msg} prevMsg={messages[i - 1]} />
                     ))}
@@ -230,62 +197,39 @@ function Chat({ id }) {
                 </div>
             </div>
 
-            {/* ── INPUT BAR — flex-shrink:0 ── */}
-            <div className="chat-input-bar">
-                <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+            {/* Input bar */}
+            <div className={s.inputBar}>
+                <div className={s.inputInner}>
 
-                    {/* Image preview strip */}
                     {imagePreview && (
-                        <div style={{
-                            marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px',
-                            padding: '9px 13px', background: '#111119',
-                            border: '1px solid rgba(108,99,255,0.22)', borderRadius: '11px',
-                        }}>
-                            <img src={imagePreview} alt="preview" style={{
-                                width: '40px', height: '40px', borderRadius: '7px', objectFit: 'cover',
-                            }} />
-                            <div style={{ flex: 1 }}>
-                                <div style={{ color: '#f0f0f8', fontSize: '12px', fontWeight: 500 }}>{imageFile?.name}</div>
-                                <div style={{ color: '#7a7a9a', fontSize: '11px' }}>Ready to send</div>
+                        <div className={s.imagePreviewStrip}>
+                            <img src={imagePreview} alt="preview" className={s.imagePreviewThumb} />
+                            <div className={s.imagePreviewInfo}>
+                                <div className={s.imagePreviewName}>{imageFile?.name}</div>
+                                <div className={s.imagePreviewSub}>Ready to send</div>
                             </div>
-                            <button onClick={clearImage} style={{
-                                width: '24px', height: '24px', borderRadius: '6px',
-                                border: '1px solid rgba(255,255,255,0.08)', background: 'transparent',
-                                color: '#7a7a9a', cursor: 'pointer', fontSize: '10px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            }}>✕</button>
+                            <button className={s.clearImageBtn} onClick={clearImage}>✕</button>
                         </div>
                     )}
 
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
-                        {/* Camera button */}
+                    <div className={s.inputRow}>
                         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} style={{ display: 'none' }} />
                         <button
+                            className={`${s.cameraBtn} ${imagePreview ? s.cameraBtnActive : ''}`}
                             onClick={() => fileInputRef.current?.click()}
                             disabled={resolved}
-                            title="Upload dashboard / warning light image"
-                            style={{
-                                width: '44px', height: '44px', flexShrink: 0, borderRadius: '11px',
-                                border: `1px solid ${imagePreview ? 'rgba(108,99,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                                background: imagePreview ? 'rgba(108,99,255,0.12)' : 'transparent',
-                                color: imagePreview ? '#a89fff' : '#7a7a9a',
-                                cursor: resolved ? 'not-allowed' : 'pointer',
-                                fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.2s',
-                            }}
+                            title="Upload dashboard image"
                         >📷</button>
 
-                        {/* Textarea */}
-                        <div style={{
-                            flex: 1, background: '#111119', borderRadius: '12px', overflow: 'hidden',
-                            border: `1px solid ${input ? 'rgba(108,99,255,0.32)' : 'rgba(255,255,255,0.08)'}`,
-                            transition: 'border-color 0.2s',
-                        }}>
+                        <div className={`${s.textareaWrap} ${focused ? s.textareaWrapFocused : ''}`}>
                             <textarea
                                 ref={el => { inputRef.current = el; textareaRef.current = el; }}
+                                className={s.textarea}
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
+                                onFocus={() => setFocused(true)}
+                                onBlur={() => setFocused(false)}
                                 disabled={sending || resolved}
                                 placeholder={
                                     resolved  ? 'This chat is resolved' :
@@ -293,16 +237,6 @@ function Chat({ id }) {
                                             'Describe your issue or upload a warning light image...'
                                 }
                                 rows={1}
-                                style={{
-                                    width: '100%', padding: '11px 14px',
-                                    background: 'transparent', border: 'none', outline: 'none',
-                                    color: '#f0f0f8', fontSize: '14px',
-                                    fontFamily: 'DM Sans, sans-serif',
-                                    resize: 'none', lineHeight: 1.55,
-                                    maxHeight: '120px', overflowY: 'auto',
-                                    boxSizing: 'border-box',
-                                    opacity: resolved ? 0.5 : 1,
-                                }}
                                 onInput={e => {
                                     e.target.style.height = 'auto';
                                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
@@ -310,122 +244,96 @@ function Chat({ id }) {
                             />
                         </div>
 
-                        {/* Send button */}
                         <button
+                            className={`${s.sendBtn} ${canSend ? s.sendBtnActive : ''}`}
                             onClick={handleSend}
-                            disabled={(!input.trim() && !imageFile) || sending || resolved}
-                            style={{
-                                width: '44px', height: '44px', flexShrink: 0, borderRadius: '11px',
-                                border: 'none',
-                                background: ((!input.trim() && !imageFile) || sending || resolved)
-                                    ? 'rgba(108,99,255,0.22)'
-                                    : 'linear-gradient(135deg, #6c63ff, #a855f7)',
-                                color: 'white', fontSize: '18px',
-                                cursor: ((!input.trim() && !imageFile) || sending || resolved)
-                                    ? 'not-allowed' : 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                transition: 'all 0.2s',
-                                boxShadow: (input.trim() || imageFile) && !sending && !resolved
-                                    ? '0 0 14px rgba(108,99,255,0.3)' : 'none',
-                            }}
+                            disabled={!canSend}
                         >
-                            {sending
-                                ? <span style={{
-                                    width: '14px', height: '14px',
-                                    border: '2px solid rgba(255,255,255,0.3)',
-                                    borderTopColor: 'white', borderRadius: '50%', display: 'inline-block',
-                                    animation: 'spin 0.6s linear infinite',
-                                }} />
-                                : '↑'}
+                            {sending ? <span className={s.sendSpinner} /> : '↑'}
                         </button>
                     </div>
 
-                    {/*<p style={{ textAlign: 'center', color: '#4a4a6a', fontSize: '11px', marginTop: '8px' }}>*/}
-                    {/*    Powered by Groq AI · For informational purposes only*/}
-                    {/*</p>*/}
                 </div>
             </div>
         </>
     );
 }
 
-/* ── MessageBubble ──────────────────────────────────────────────── */
+/* ── Format bot content: fix inline numbered lists → proper markdown lists ── */
+function formatBotContent(content) {
+    if (!content) return content;
+
+    // Replace patterns like "1. Foo — ... 2. Bar — ..." with proper newlines
+    // This handles cases where the AI returns numbered items in one paragraph
+    let formatted = content
+        // Ensure each "N. " at the start of inline list items gets a newline before it
+        .replace(/(?<!\n)(\s)((\d+)\.\s+\*\*)/g, '\n$2')
+        .replace(/(?<!\n)(\s)((\d+)\.\s+[A-Z])/g, '\n$2');
+
+    // Also handle bold section headers inline like "**1. Title** — content 2. ..."
+    formatted = formatted.replace(/\s(\d+\.\s)/g, '\n$1');
+
+    // Clean up excessive blank lines
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+
+    return formatted;
+}
+
+/* ── MessageBubble ── */
 function MessageBubble({ msg, prevMsg }) {
-    const isBot       = msg.role === 'bot';
-    const isTyping    = msg.content?.startsWith('__typing__');
-    const showAvatar  = !prevMsg || prevMsg.role !== msg.role;
-    const typingLabel = isTyping ? (msg.content.split('::')[1] || 'Analyzing...') : null;
-    const severity    = isBot && !isTyping ? parseSeverity(msg.content) : null;
-    const sev         = severity ? SEV[severity] : null;
+    const isBot      = msg.role === 'bot';
+    const isTyping   = msg.content?.startsWith('__typing__');
+    const showAvatar = !prevMsg || prevMsg.role !== msg.role;
+    const severity   = isBot && !isTyping ? parseSeverity(msg.content) : null;
+
+    const rowClass = [
+        s.bubbleRow,
+        isBot ? s.bubbleRowBot : s.bubbleRowUser,
+        showAvatar ? s.bubbleRowSpaced : s.bubbleRowClose,
+    ].join(' ');
+
+    const bubbleClass = [
+        s.bubble,
+        isBot ? s.bubbleBot : s.bubbleUser,
+        isBot
+            ? (showAvatar ? s.radiusBotFirst  : s.radiusBotOther)
+            : (showAvatar ? s.radiusUserFirst : s.radiusUserOther),
+    ].join(' ');
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: isBot ? 'row' : 'row-reverse',
-            gap: '8px',
-            alignItems: 'flex-end',
-            marginTop: showAvatar ? '14px' : '2px',
-            paddingLeft:  isBot ? 0 : '52px',
-            paddingRight: isBot ? '52px' : 0,
-        }}>
-            {/* Bot avatar dot */}
+        <div className={rowClass}>
             {isBot && (
-                <div style={{
-                    width: '28px', height: '28px', flexShrink: 0, borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #6c63ff, #a855f7)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '13px', opacity: showAvatar ? 1 : 0,
-                    alignSelf: 'flex-start', marginTop: '2px',
-                }}>🔧</div>
+                <div className={`${s.botAvatar} ${showAvatar ? '' : s.botAvatarHidden}`}>🔧</div>
             )}
+            <div className={s.bubbleContainer}>
 
-            <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-
-                {/* Severity badge */}
-                {sev && (
-                    <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '4px',
-                        padding: '3px 8px', borderRadius: '7px', fontSize: '11px', fontWeight: 600,
-                        background: sev.bg, border: `1px solid ${sev.border}`, color: sev.color,
-                        alignSelf: 'flex-start',
-                    }}>{sev.label}</div>
+                {severity && (
+                    <span className={`${s.severityBadge} ${SEV_CLASS[severity]}`}>
+                        {SEV_LABEL[severity]}
+                    </span>
                 )}
 
-                {/* Uploaded image thumbnail */}
                 {msg.imagePreview && (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <img src={msg.imagePreview} alt="uploaded" style={{
-                            maxWidth: '160px', maxHeight: '120px', borderRadius: '10px',
-                            objectFit: 'cover', border: '1px solid rgba(108,99,255,0.22)',
-                        }} />
+                    <div className={s.uploadedImage}>
+                        <img src={msg.imagePreview} alt="uploaded" />
                     </div>
                 )}
 
-                {/* Bubble */}
-                <div style={{
-                    padding: '10px 14px',
-                    borderRadius: isBot
-                        ? (showAvatar ? '4px 14px 14px 14px' : '14px')
-                        : (showAvatar ? '14px 4px 14px 14px' : '14px'),
-                    background: isBot ? '#111119' : 'rgba(108,99,255,0.14)',
-                    border: `1px solid ${isBot ? 'rgba(255,255,255,0.06)' : 'rgba(108,99,255,0.22)'}`,
-                    color: '#f0f0f8', fontSize: '14px', lineHeight: 1.65,
-                    wordBreak: 'break-word',
-                }}>
+                <div className={bubbleClass}>
                     {isTyping ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                            <div style={{ display: 'flex', gap: '3px' }}>
+                        <div className={s.typingInner}>
+                            <div className={s.typingDots}>
                                 <div className="typing-dot" />
                                 <div className="typing-dot" />
                                 <div className="typing-dot" />
                             </div>
-                            <span style={{ color: '#7a7a9a', fontSize: '12px', fontStyle: 'italic' }}>
-                                {typingLabel}
+                            <span className={s.typingLabel}>
+                                {msg.content.split('::')[1] || 'Analyzing...'}
                             </span>
                         </div>
                     ) : isBot ? (
                         <div className="markdown-body">
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            <ReactMarkdown>{formatBotContent(msg.content)}</ReactMarkdown>
                         </div>
                     ) : (
                         <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>

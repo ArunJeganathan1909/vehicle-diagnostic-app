@@ -5,7 +5,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getChats, createChat, deleteChat } from '@/lib/api';
 import Image from 'next/image';
+import LogoImg from '@/app/AutoDiag.png';
 import toast from 'react-hot-toast';
+import s from '@/styles/Sidebar.module.css';
 
 const formatDate = (dateStr) => {
     const d    = new Date(dateStr);
@@ -62,12 +64,12 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
 
     const groupChats = (list) => {
         const today = [], week = [], older = [];
-        const now   = new Date();
+        const now = new Date();
         list.forEach(c => {
             const d = now - new Date(c.created_at);
-            if (d < 86400000)    today.push(c);
+            if (d < 86400000)       today.push(c);
             else if (d < 604800000) week.push(c);
-            else older.push(c);
+            else                    older.push(c);
         });
         return { today, week, older };
     };
@@ -76,69 +78,60 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
     const W = collapsed ? 64 : 260;
 
     return (
-        <aside className="sidebar" style={{ width: W }}>
+        <aside className={s.sidebar} style={{ width: W }}>
 
-            {/* Logo + collapse */}
-            <div style={{
-                height: '64px', flexShrink: 0, display: 'flex', alignItems: 'center',
-                justifyContent: collapsed ? 'center' : 'space-between',
-                padding: collapsed ? '0 16px' : '0 14px 0 16px',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-            }}>
+            {/* Header */}
+            <div className={`${s.header} ${collapsed ? s.headerCollapsed : ''}`}>
                 {!collapsed && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                        <div style={{
-                            width: '30px', height: '30px', borderRadius: '9px',
-                            background: 'linear-gradient(135deg, #6c63ff, #a855f7)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '15px', boxShadow: '0 0 14px rgba(108,99,255,0.3)',
-                        }}>🔧</div>
-                        <span style={{ fontFamily: 'Syne, sans-serif', fontSize: '15px', fontWeight: 800, color: '#f0f0f8', letterSpacing: '-0.02em' }}>AutoDiag</span>
+                    <div className={s.logo}>
+                        <Image
+                            src={LogoImg}
+                            alt="AutoDiag Logo"
+                            width={32}
+                            height={32}
+                            className={s.logoImg}
+                            priority
+                        />
+                        <span className={s.logoText}>AutoDiag</span>
                     </div>
                 )}
-                <button onClick={() => setCollapsed(p => !p)} style={{
-                    width: '26px', height: '26px', borderRadius: '7px',
-                    border: '1px solid rgba(255,255,255,0.08)', background: 'transparent',
-                    color: '#7a7a9a', cursor: 'pointer', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', fontSize: '11px', transition: 'all 0.2s',
-                }}
-                        onMouseEnter={e => { e.currentTarget.style.color = '#f0f0f8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.color = '#7a7a9a'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
-                >{collapsed ? '→' : '←'}</button>
+                {collapsed && (
+                    <Image
+                        src={LogoImg}
+                        alt="AutoDiag"
+                        width={28}
+                        height={28}
+                        className={s.logoImg}
+                        priority
+                    />
+                )}
+                <button className={s.collapseBtn} onClick={() => setCollapsed(p => !p)}
+                        title={collapsed ? 'Expand' : 'Collapse'}>
+                    {collapsed ? '→' : '←'}
+                </button>
             </div>
 
             {/* New Chat */}
-            <div style={{ padding: collapsed ? '10px 8px' : '10px', flexShrink: 0 }}>
-                <button onClick={handleNewChat} disabled={creating} style={{
-                    width: '100%', padding: collapsed ? '9px' : '9px 12px',
-                    borderRadius: '9px', border: '1px solid rgba(108,99,255,0.28)',
-                    background: 'rgba(108,99,255,0.09)', color: '#a89fff',
-                    fontSize: '12px', fontWeight: 600, fontFamily: 'Syne, sans-serif',
-                    cursor: creating ? 'not-allowed' : 'pointer',
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    gap: '7px', transition: 'all 0.2s', opacity: creating ? 0.6 : 1,
-                }}
-                        onMouseEnter={e => { if (!creating) { e.currentTarget.style.background = 'rgba(108,99,255,0.16)'; e.currentTarget.style.borderColor = 'rgba(108,99,255,0.45)'; }}}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(108,99,255,0.09)'; e.currentTarget.style.borderColor = 'rgba(108,99,255,0.28)'; }}
+            <div className={`${s.newChatWrap} ${collapsed ? s.newChatWrapCollapsed : ''}`}>
+                <button
+                    className={`${s.newChatBtn} ${collapsed ? s.newChatBtnCollapsed : ''}`}
+                    onClick={handleNewChat}
+                    disabled={creating}
+                    title="New Diagnostic"
                 >
-                    <span style={{ fontSize: '15px', lineHeight: 1 }}>{creating ? '⏳' : '＋'}</span>
+                    <span className={s.newChatIcon}>{creating ? '⏳' : '＋'}</span>
                     {!collapsed && <span>{creating ? 'Creating...' : 'New Diagnostic'}</span>}
                 </button>
             </div>
 
-            {/* Chat list — scrollable */}
-            <div className="sidebar-chat-list">
+            {/* Chat list — scrolls independently */}
+            <div className={s.chatList}>
                 {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
-                        <div className="loader" style={{ width: '18px', height: '18px', borderWidth: '2px' }} />
+                    <div className={s.loaderWrap}>
+                        <div className="loader" style={{ width: 18, height: 18, borderWidth: 2 }} />
                     </div>
                 ) : chats.length === 0 ? (
-                    !collapsed && (
-                        <div style={{ textAlign: 'center', padding: '28px 16px', color: '#4a4a6a', fontSize: '12px', lineHeight: 1.6 }}>
-                            No chats yet.<br />Start a new diagnostic!
-                        </div>
-                    )
+                    !collapsed && <p className={s.emptyMsg}>No chats yet.<br />Start a new diagnostic!</p>
                 ) : (
                     [
                         { label: 'Today',     items: g.today },
@@ -146,20 +139,16 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                         { label: 'Older',     items: g.older },
                     ].map(({ label, items }) =>
                             items.length > 0 && (
-                                <div key={label} style={{ marginBottom: '6px' }}>
-                                    {!collapsed && (
-                                        <div style={{
-                                            fontSize: '10px', fontWeight: 700, letterSpacing: '0.07em',
-                                            color: '#4a4a6a', textTransform: 'uppercase',
-                                            padding: '8px 8px 3px',
-                                        }}>{label}</div>
-                                    )}
+                                <div key={label} className={s.group}>
+                                    {!collapsed && <p className={s.groupLabel}>{label}</p>}
                                     {items.map(chat => (
-                                        <ChatItem key={chat.id} chat={chat}
-                                                  isActive={String(activeChatId) === String(chat.id)}
-                                                  collapsed={collapsed}
-                                                  onDelete={handleDelete}
-                                                  onClick={() => router.push(`/chat/${chat.id}`)}
+                                        <ChatItem
+                                            key={chat.id}
+                                            chat={chat}
+                                            isActive={String(activeChatId) === String(chat.id)}
+                                            collapsed={collapsed}
+                                            onDelete={handleDelete}
+                                            onClick={() => router.push(`/chat/${chat.id}`)}
                                         />
                                     ))}
                                 </div>
@@ -168,52 +157,27 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                 )}
             </div>
 
-            {/* Bottom: nav + user */}
-            <div style={{ flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.06)', padding: collapsed ? '10px 8px' : '10px' }}>
-                <button onClick={() => router.push('/dashboard')} style={{
-                    width: '100%', padding: collapsed ? '8px' : '7px 10px',
-                    borderRadius: '8px', border: 'none',
-                    background: pathname === '/dashboard' ? 'rgba(108,99,255,0.1)' : 'transparent',
-                    color: pathname === '/dashboard' ? '#a89fff' : '#7a7a9a',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    gap: '8px', fontSize: '12px', marginBottom: '6px', transition: 'all 0.2s',
-                }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(108,99,255,0.1)'; e.currentTarget.style.color = '#a89fff'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = pathname === '/dashboard' ? 'rgba(108,99,255,0.1)' : 'transparent'; e.currentTarget.style.color = pathname === '/dashboard' ? '#a89fff' : '#7a7a9a'; }}
+            {/* Footer */}
+            <div className={`${s.footer} ${collapsed ? s.footerCollapsed : ''}`}>
+                <button
+                    className={`${s.dashboardBtn} ${collapsed ? s.dashboardBtnCollapsed : ''} ${pathname === '/dashboard' ? s.dashboardBtnActive : ''}`}
+                    onClick={() => router.push('/dashboard')}
+                    title="Dashboard"
                 >
-                    <span style={{ fontSize: '14px' }}>⊞</span>
-                    {!collapsed && <span style={{ fontWeight: 500 }}>Dashboard</span>}
+                    <span>⊞</span>
+                    {!collapsed && <span className={s.dashboardBtnLabel}>Dashboard</span>}
                 </button>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0 }}>
-                        {user?.photoURL ? (
-                            <Image src={user.photoURL} alt="avatar" width={26} height={26}
-                                   style={{ borderRadius: '50%', border: '1.5px solid rgba(108,99,255,0.3)', flexShrink: 0 }} />
-                        ) : (
-                            <div style={{
-                                width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
-                                background: 'linear-gradient(135deg, #6c63ff, #a855f7)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '10px', fontWeight: 700, color: 'white',
-                            }}>{user?.displayName?.[0] || user?.email?.[0] || 'U'}</div>
-                        )}
-                        {!collapsed && (
-                            <span style={{ color: '#7a7a9a', fontSize: '11px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {user?.displayName || user?.email}
-                            </span>
-                        )}
+                <div className={`${s.userRow} ${collapsed ? s.userRowCollapsed : ''}`}>
+                    <div className={s.userInfo}>
+                        {user?.photoURL
+                            ? <Image src={user.photoURL} alt="avatar" width={26} height={26} className={s.avatar} />
+                            : <div className={s.avatarFallback}>{user?.displayName?.[0] || user?.email?.[0] || 'U'}</div>
+                        }
+                        {!collapsed && <span className={s.userName}>{user?.displayName || user?.email}</span>}
                     </div>
                     {!collapsed && (
-                        <button onClick={logout} style={{
-                            padding: '3px 8px', borderRadius: '6px', flexShrink: 0,
-                            border: '1px solid rgba(255,255,255,0.06)', background: 'transparent',
-                            color: '#4a4a6a', fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s',
-                        }}
-                                onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.color = '#4a4a6a'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
-                        >Sign out</button>
+                        <button className={s.signOutBtn} onClick={logout}>Sign out</button>
                     )}
                 </div>
             </div>
@@ -222,55 +186,35 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
 }
 
 function ChatItem({ chat, isActive, collapsed, onDelete, onClick }) {
-    const [hovered, setHovered] = useState(false);
     const vehicleLabel = chat.vehicle_brand
         ? `${chat.vehicle_year || ''} ${chat.vehicle_brand} ${chat.vehicle_model || ''}`.trim()
         : null;
 
     return (
-        <div onClick={onClick}
-             onMouseEnter={() => setHovered(true)}
-             onMouseLeave={() => setHovered(false)}
-             title={collapsed ? (vehicleLabel || chat.title || 'New Vehicle Chat') : undefined}
-             style={{
-                 padding: collapsed ? '9px' : '8px 9px', borderRadius: '8px', cursor: 'pointer',
-                 background: isActive ? 'rgba(108,99,255,0.13)' : hovered ? 'rgba(255,255,255,0.035)' : 'transparent',
-                 border: `1px solid ${isActive ? 'rgba(108,99,255,0.28)' : 'transparent'}`,
-                 transition: 'all 0.15s', display: 'flex', alignItems: 'center',
-                 justifyContent: collapsed ? 'center' : 'space-between',
-                 gap: '7px', marginBottom: '1px',
-             }}
+        <div
+            className={`${s.chatItem} ${collapsed ? s.chatItemCollapsed : ''} ${isActive ? s.chatItemActive : ''}`}
+            onClick={onClick}
+            title={collapsed ? (vehicleLabel || chat.title || 'New Vehicle Chat') : undefined}
         >
             {collapsed ? (
-                <span style={{ fontSize: '14px' }}>{chat.vehicle_brand ? '🚗' : '💬'}</span>
+                <span style={{ fontSize: 14 }}>{chat.vehicle_brand ? '🚗' : '💬'}</span>
             ) : (
                 <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: 0, flex: 1 }}>
-                        <span style={{ fontSize: '13px', flexShrink: 0 }}>{chat.vehicle_brand ? '🚗' : '💬'}</span>
-                        <div style={{ minWidth: 0 }}>
-                            <div style={{
-                                fontSize: '12px', fontWeight: isActive ? 600 : 400,
-                                color: isActive ? '#f0f0f8' : '#b0b0c8',
-                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                            }}>{vehicleLabel || chat.title || 'New Vehicle Chat'}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '1px' }}>
-                                <span style={{ fontSize: '9px', color: chat.status === 'resolved' ? '#22c55e' : '#6c63ff' }}>
+                    <div className={s.chatItemInner}>
+                        <span className={s.chatItemEmoji}>{chat.vehicle_brand ? '🚗' : '💬'}</span>
+                        <div className={s.chatItemText}>
+                            <div className={`${s.chatItemTitle} ${isActive ? s.chatItemTitleActive : ''}`}>
+                                {vehicleLabel || chat.title || 'New Vehicle Chat'}
+                            </div>
+                            <div className={s.chatItemMeta}>
+                                <span className={`${s.chatItemDot} ${chat.status === 'resolved' ? s.chatItemDotResolved : ''}`}>
                                     {chat.status === 'resolved' ? '✓' : '●'}
                                 </span>
-                                <span style={{ fontSize: '10px', color: '#4a4a6a' }}>{formatDate(chat.created_at)}</span>
+                                <span className={s.chatItemDate}>{formatDate(chat.created_at)}</span>
                             </div>
                         </div>
                     </div>
-                    <button onClick={e => onDelete(e, chat.id)} style={{
-                        width: '22px', height: '22px', borderRadius: '5px', flexShrink: 0,
-                        border: '1px solid transparent', background: 'transparent',
-                        color: '#4a4a6a', cursor: 'pointer', fontSize: '10px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        opacity: hovered ? 1 : 0, transition: 'all 0.15s',
-                    }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.22)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#4a4a6a'; e.currentTarget.style.borderColor = 'transparent'; }}
-                    >✕</button>
+                    <button className={s.deleteBtn} onClick={e => onDelete(e, chat.id)}>✕</button>
                 </>
             )}
         </div>

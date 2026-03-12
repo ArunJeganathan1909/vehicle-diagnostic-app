@@ -8,8 +8,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/[id]/page.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/[id]/page.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/dashboard/page.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/layout.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/layout.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/favicon.ico" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/favicon.ico" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/components/Sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/components/Sidebar.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
