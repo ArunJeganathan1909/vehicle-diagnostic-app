@@ -1,0 +1,489 @@
+/* ═══════════════════════════════════════════
+   LOGIN PAGE — CSS MODULE
+═══════════════════════════════════════════ */
+
+/* ── Page shell ── */
+.shell {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    background: #09090f;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ── Background effects ── */
+.bgGrid {
+    position: absolute;
+    inset: 0;
+    background-image:
+            linear-gradient(rgba(108, 99, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(108, 99, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bgOrbTopLeft {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(108, 99, 255, 0.12) 0%, transparent 60%);
+    top: -250px;
+    left: -150px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bgOrbBottomRight {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.09) 0%, transparent 60%);
+    bottom: -180px;
+    right: -80px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Glowing vertical divider */
+.divider {
+    position: absolute;
+    left: 56%;
+    top: 6%;
+    bottom: 6%;
+    width: 1px;
+    background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(108, 99, 255, 0.2) 15%,
+            rgba(168, 85, 247, 0.4) 50%,
+            rgba(108, 99, 255, 0.2) 85%,
+            transparent 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* ══════════════════════════════════════
+   LEFT PANEL
+══════════════════════════════════════ */
+.left {
+    flex: 0 0 56%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 72px 0 72px;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
+
+/* ── Logo ── */
+.logoRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 40px;
+}
+
+.logoImgWrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(108, 99, 255, 0.35);
+    box-shadow:
+            0 0 0 1px rgba(108, 99, 255, 0.12),
+            0 0 24px rgba(108, 99, 255, 0.28);
+    flex-shrink: 0;
+    background: #000;
+}
+
+.logoImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.logoMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.logoName {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #f0f0f8;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.logoBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(108, 99, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.22);
+    color: #a89fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    width: fit-content;
+}
+
+.logoBadgeDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #6c63ff;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1;   transform: scale(1);   }
+    50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+/* ── Headline ── */
+.headline {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    color: #f0f0f8;
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+    margin-bottom: 16px;
+}
+
+.headlineAccent {
+    background: linear-gradient(135deg, #6c63ff 0%, #a855f7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtext {
+    color: #6a6a8a;
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 420px;
+    margin-bottom: 40px;
+}
+
+/* ── How it works ── */
+.sectionLabel {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #3a3a5a;
+    margin-bottom: 16px;
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    position: relative;
+}
+
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    height: calc(100% - 4px);
+    width: 1px;
+    background: linear-gradient(to bottom, rgba(108, 99, 255, 0.25), rgba(108, 99, 255, 0.03));
+}
+
+.stepIconWrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(108, 99, 255, 0.07);
+    border: 1px solid rgba(108, 99, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.stepContent {
+    padding-bottom: 20px;
+}
+
+.stepTitle {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #d0d0e8;
+    margin-bottom: 2px;
+    letter-spacing: -0.01em;
+}
+
+.stepDesc {
+    font-size: 12px;
+    color: #6a6a8a;
+    line-height: 1.6;
+    max-width: 380px;
+}
+
+/* ── Feature pills ── */
+.pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 28px;
+}
+
+.pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #8a8aaa;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.pill:hover {
+    background: rgba(108, 99, 255, 0.07);
+    border-color: rgba(108, 99, 255, 0.18);
+    color: #b4a8ff;
+}
+
+.pillDot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6c63ff, #a855f7);
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════
+   RIGHT PANEL
+══════════════════════════════════════ */
+.right {
+    flex: 0 0 44%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 64px 0 56px;
+    position: relative;
+    z-index: 2;
+}
+
+.card {
+    width: 100%;
+    max-width: 340px;
+    animation: fadeUp 0.5s ease forwards;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+.cardEyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6c63ff;
+    margin-bottom: 10px;
+}
+
+.cardTitle {
+    font-family: 'Syne', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    color: #f0f0f8;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    line-height: 1.15;
+}
+
+.cardSub {
+    color: #6a6a8a;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+/* ── Google button ── */
+.googleBtn {
+    width: 100%;
+    padding: 13px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #f0f0f8;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 10;
+    margin-bottom: 18px;
+}
+
+.googleBtn:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.googleBtn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ── Or row ── */
+.orRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.orLine {
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.orText {
+    color: #3a3a5a;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ── Value cards ── */
+.valueCards {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 22px;
+}
+
+.valueCard {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 13px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: all 0.2s;
+}
+
+.valueCard:hover {
+    background: rgba(108, 99, 255, 0.05);
+    border-color: rgba(108, 99, 255, 0.1);
+}
+
+.valueIcon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(108, 99, 255, 0.08);
+    border: 1px solid rgba(108, 99, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.valueText {
+    font-size: 12px;
+    color: #8a8aaa;
+    line-height: 1.4;
+}
+
+.valueBold {
+    font-weight: 600;
+    color: #c8c8e0;
+}
+
+/* ── Trust ── */
+.trustRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-bottom: 12px;
+}
+
+.trustDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+
+.trustText {
+    color: #3a3a5a;
+    font-size: 11px;
+}
+
+.terms {
+    text-align: center;
+    color: #3a3a5a;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+/* ── Loading ── */
+.loadingScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #09090f;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 860px) {
+    .left    { display: none; }
+    .divider { display: none; }
+    .right {
+        flex: 1;
+        padding: 48px 24px;
+    }
+}
