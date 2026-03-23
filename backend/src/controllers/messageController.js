@@ -39,7 +39,13 @@ const sendMessage = async (req, res) => {
 
         const allMessages = await Message.findByChatId(chat_id);
 
-        const aiResponse = await axios.post('http://localhost:8000/chat', {
+        // Replace this:
+        // axios.post('http://localhost:8000/chat',
+
+        // With this:
+        // axios.post(`${process.env.AI_SERVICE_URL}/chat`,
+
+        const aiResponse = axios.post(`${process.env.AI_SERVICE_URL}/chat`, {
             chat_id,
             vehicle_brand:    chat.vehicle_brand,
             vehicle_model:    chat.vehicle_model,
