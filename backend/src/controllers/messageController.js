@@ -1,5 +1,6 @@
 const Chat    = require('../models/Chat');
 const Message = require('../models/Message');
+const User    = require('../models/User');
 const axios   = require('axios');
 
 // POST /api/messages
@@ -14,20 +15,33 @@ const sendMessage = async (req, res) => {
         const chat = await Chat.findById(chat_id);
         if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
+        const user = await User.findById(chat.user_id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // ── Block image upload for free plan ──────────────────────────────
+        if (image_base64 && !User.canUseImageAnalysis(user.plan)) {
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('🚫  IMAGE UPLOAD BLOCKED — FREE PLAN');
+            console.log('  User ID :', user.id, '| Plan:', user.plan);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            return res.status(403).json({
+                message:    'Image analysis is available on Pro and Ultra plans only.',
+                code:       'IMAGE_ANALYSIS_NOT_AVAILABLE',
+                plan:       user.plan,
+                upgradeUrl: '/pricing',
+            });
+        }
+
+        // ── No message limit on any plan — proceed directly ───────────────
+
         const userMessage = await Message.create(chat_id, 'user', content || '[Image uploaded]');
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('💬  USER MESSAGE SAVED');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('  Message ID :', userMessage.id);
-        console.log('  Chat ID    :', chat_id);
-        console.log('  Content    :', userMessage.content);
-        console.log('  Has Image  :', image_base64 ? 'yes' : 'no');
+        console.log('  ID:', userMessage.id, '| Chat:', chat_id, '| Plan:', user.plan, '| Image:', image_base64 ? 'yes' : 'no');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         const allMessages = await Message.findByChatId(chat_id);
-
-        console.log(`🤖 Sending to AI — Chat [${chat_id}], ${allMessages.length} message(s)${image_base64 ? ', with image' : ''}...`);
 
         const aiResponse = await axios.post('http://localhost:8000/chat', {
             chat_id,
@@ -41,7 +55,6 @@ const sendMessage = async (req, res) => {
 
         const { reply, vehicle_brand, vehicle_model, vehicle_year } = aiResponse.data;
 
-        // Update vehicle info whenever any new field is returned
         const needsUpdate =
             (vehicle_brand && vehicle_brand !== chat.vehicle_brand) ||
             (vehicle_model && vehicle_model !== chat.vehicle_model) ||
@@ -53,24 +66,11 @@ const sendMessage = async (req, res) => {
                 vehicle_model: vehicle_model || chat.vehicle_model,
                 vehicle_year:  vehicle_year  || chat.vehicle_year,
             });
-
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('🚘  VEHICLE INFO UPDATED');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('  Brand :', vehicle_brand || chat.vehicle_brand);
-            console.log('  Model :', vehicle_model || chat.vehicle_model);
-            console.log('  Year  :', vehicle_year  || chat.vehicle_year);
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`🚘 Vehicle updated: ${vehicle_brand} ${vehicle_model} ${vehicle_year}`);
         }
 
         const botMessage = await Message.create(chat_id, 'bot', reply);
-
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🤖  BOT REPLY SAVED');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('  Message ID :', botMessage.id);
-        console.log('  Content    :', botMessage.content.substring(0, 80) + '...');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log(`🤖 Bot replied: Message [${botMessage.id}]`);
 
         res.status(201).json({ message: 'Message sent successfully', userMessage, botMessage });
 

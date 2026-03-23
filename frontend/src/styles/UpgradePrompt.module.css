@@ -1,0 +1,167 @@
+/* UpgradePrompt.module.css */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 24px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.card {
+    background: #111119;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    animation: slideUp 0.25s ease;
+    text-align: center;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0);    }
+}
+
+.closeBtn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: transparent;
+    color: #4a4a6a;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.closeBtn:hover { color: #f0f0f8; border-color: rgba(255,255,255,0.15); }
+
+.iconWrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: rgba(108, 99, 255, 0.1);
+    border: 1px solid rgba(108, 99, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 18px;
+}
+
+.title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #f0f0f8;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+
+.desc {
+    font-size: 13px;
+    color: #7a7a9a;
+    line-height: 1.65;
+    margin-bottom: 22px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Mini comparison table ── */
+.compare {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 22px;
+}
+
+.compareHeader {
+    display: grid;
+    grid-template-columns: 1fr 64px 64px 64px;
+    padding: 7px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.compareHeadFree  { font-size: 10px; font-weight: 700; color: #4a4a6a; text-align: center; }
+.compareHeadPro   { font-size: 10px; font-weight: 700; color: #a89fff; text-align: center; }
+.compareHeadUltra { font-size: 10px; font-weight: 700; color: #c084fc; text-align: center; }
+
+.compareRow {
+    display: grid;
+    grid-template-columns: 1fr 64px 64px 64px;
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    align-items: center;
+}
+.compareRow:last-child { border-bottom: none; }
+
+.compareLabel { font-size: 12px; color: #9a9ab8; text-align: left; }
+
+.compareVal   { font-size: 11px; font-weight: 600; text-align: center; }
+.compareFree  { color: #4a4a6a; }
+.comparePro   { color: #a89fff; }
+.compareUltra { color: #c084fc; }
+
+/* ── Buttons ── */
+.ctaBtn {
+    width: 100%;
+    padding: 13px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(135deg, #6c63ff, #a855f7);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 20px rgba(108, 99, 255, 0.3);
+}
+.ctaBtn:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(108,99,255,0.45); }
+
+.skipBtn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    color: #4a4a6a;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.skipBtn:hover { color: #9a9ab8; border-color: rgba(255,255,255,0.12); }
+
+/* ── PayHere note ── */
+.payhereNote {
+    font-size: 11px;
+    color: #4a4a6a;
+    text-align: center;
+    margin-bottom: 12px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    background: rgba(0, 116, 217, 0.06);
+    border: 1px solid rgba(0, 116, 217, 0.12);
+}

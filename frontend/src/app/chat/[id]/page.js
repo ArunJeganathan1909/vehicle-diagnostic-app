@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Sidebar from '@/components/Sidebar';
+import UpgradePrompt from '@/components/UpgradePrompt';
 import { getChat, sendMessage, resolveChat } from '@/lib/api';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
@@ -46,17 +47,28 @@ function toBase64(file) {
     });
 }
 
+function formatBotContent(content) {
+    if (!content) return content;
+    let formatted = content
+        .replace(/(?<!\n)(\s)((\d+)\.\s+\*\*)/g, '\n$2')
+        .replace(/(?<!\n)(\s)((\d+)\.\s+[A-Z])/g, '\n$2');
+    formatted = formatted.replace(/\s(\d+\.\s)/g, '\n$1');
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+    return formatted;
+}
+
 /* ── Chat ── */
 function Chat({ id }) {
     const router = useRouter();
-    const [chat,         setChat]         = useState(null);
-    const [messages,     setMessages]     = useState([]);
-    const [input,        setInput]        = useState('');
-    const [sending,      setSending]      = useState(false);
-    const [loading,      setLoading]      = useState(true);
-    const [imageFile,    setImageFile]    = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
-    const [focused,      setFocused]      = useState(false);
+    const [chat,          setChat]          = useState(null);
+    const [messages,      setMessages]      = useState([]);
+    const [input,         setInput]         = useState('');
+    const [sending,       setSending]       = useState(false);
+    const [loading,       setLoading]       = useState(true);
+    const [imageFile,     setImageFile]     = useState(null);
+    const [imagePreview,  setImagePreview]  = useState(null);
+    const [focused,       setFocused]       = useState(false);
+    const [upgradePrompt, setUpgradePrompt] = useState(null); // error code string
 
     const messagesEndRef = useRef(null);
     const inputRef       = useRef(null);
@@ -138,9 +150,17 @@ function Chat({ id }) {
             );
             const chatRes = await getChat(id);
             setChat(chatRes.data.chat);
-        } catch {
+
+        } catch (err) {
             setMessages(prev => prev.filter(m => m.id !== 'typing' && !m.isTemp));
-            toast.error('Failed to send message');
+
+            // ── Handle plan limit errors ──────────────────────────────────
+            const code = err.response?.data?.code;
+            if (code === 'IMAGE_ANALYSIS_NOT_AVAILABLE' || code === 'CHAT_LIMIT_REACHED') {
+                setUpgradePrompt(code);
+            } else {
+                toast.error('Failed to send message');
+            }
         } finally {
             setSending(false);
             setTimeout(() => inputRef.current?.focus(), 50);
@@ -159,6 +179,15 @@ function Chat({ id }) {
         } catch { toast.error('Failed to resolve'); }
     };
 
+    // ── Camera button click — block free users immediately ──────────────────
+    const handleCameraClick = () => {
+        // If the chat's user is on free plan, show upgrade prompt before file picker
+        // We detect free plan by checking if image analysis has been blocked before
+        // The cleanest way: just let them try and catch the 403 from backend
+        // But for instant UX, check if we know the plan already
+        fileInputRef.current?.click();
+    };
+
     if (loading) return (
         <div className={s.loadingScreen}><div className="loader" /></div>
     );
@@ -166,12 +195,12 @@ function Chat({ id }) {
     const vehicleLabel = chat?.vehicle_brand
         ? `${chat.vehicle_year || ''} ${chat.vehicle_brand} ${chat.vehicle_model || ''}`.trim()
         : null;
-    const resolved     = chat?.status === 'resolved';
-    const canSend      = (input.trim() || imageFile) && !sending && !resolved;
+    const resolved = chat?.status === 'resolved';
+    const canSend  = (input.trim() || imageFile) && !sending && !resolved;
 
     return (
         <>
-            {/* Header */}
+            {/* ── Header ── */}
             <header className={s.header}>
                 <div className={s.headerLeft}>
                     <div className={s.headerTitle}>{chat?.title || 'New Vehicle Chat'}</div>
@@ -187,7 +216,7 @@ function Chat({ id }) {
                 </div>
             </header>
 
-            {/* Messages */}
+            {/* ── Messages ── */}
             <div className={s.messages}>
                 <div className={s.messagesInner}>
                     {messages.map((msg, i) => (
@@ -197,7 +226,7 @@ function Chat({ id }) {
                 </div>
             </div>
 
-            {/* Input bar */}
+            {/* ── Input bar ── */}
             <div className={s.inputBar}>
                 <div className={s.inputInner}>
 
@@ -216,7 +245,7 @@ function Chat({ id }) {
                         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} style={{ display: 'none' }} />
                         <button
                             className={`${s.cameraBtn} ${imagePreview ? s.cameraBtnActive : ''}`}
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={handleCameraClick}
                             disabled={resolved}
                             title="Upload dashboard image"
                         >📷</button>
@@ -253,30 +282,19 @@ function Chat({ id }) {
                         </button>
                     </div>
 
+                    <p className={s.footer}>Powered by Groq AI · For informational purposes only</p>
                 </div>
             </div>
+
+            {/* ── Upgrade prompt modal ── */}
+            {upgradePrompt && (
+                <UpgradePrompt
+                    type={upgradePrompt}
+                    onClose={() => setUpgradePrompt(null)}
+                />
+            )}
         </>
     );
-}
-
-/* ── Format bot content: fix inline numbered lists → proper markdown lists ── */
-function formatBotContent(content) {
-    if (!content) return content;
-
-    // Replace patterns like "1. Foo — ... 2. Bar — ..." with proper newlines
-    // This handles cases where the AI returns numbered items in one paragraph
-    let formatted = content
-        // Ensure each "N. " at the start of inline list items gets a newline before it
-        .replace(/(?<!\n)(\s)((\d+)\.\s+\*\*)/g, '\n$2')
-        .replace(/(?<!\n)(\s)((\d+)\.\s+[A-Z])/g, '\n$2');
-
-    // Also handle bold section headers inline like "**1. Title** — content 2. ..."
-    formatted = formatted.replace(/\s(\d+\.\s)/g, '\n$1');
-
-    // Clean up excessive blank lines
-    formatted = formatted.replace(/\n{3,}/g, '\n\n');
-
-    return formatted;
 }
 
 /* ── MessageBubble ── */

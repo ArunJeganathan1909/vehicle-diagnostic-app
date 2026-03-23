@@ -5,16 +5,21 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chats');
 const messageRoutes = require('./routes/messages');
+const subscriptionRoutes = require('./routes/subscription');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/subscription', subscriptionRoutes);
+
+
 
 // Health check
 app.get('/', (req, res) => {
