@@ -29,7 +29,7 @@ const sendMessage = async (req, res) => {
             });
         }
 
-        // ── Save user message (no resource_links for user messages) ────────
+        // ── Save user message ──────────────────────────────────────────────
         const userMessage = await Message.create(chat_id, 'user', content || '[Image uploaded]');
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -39,18 +39,18 @@ const sendMessage = async (req, res) => {
 
         const allMessages = await Message.findByChatId(chat_id);
 
-        // Replace this:
-        // axios.post('http://localhost:8000/chat',
+        // ── Call AI service — await was missing here ───────────────────────
+        const aiServiceUrl = process.env.AI_SERVICE_URL;
+        if (!aiServiceUrl) {
+            console.error('❌ AI_SERVICE_URL env var is not set!');
+            return res.status(500).json({ message: 'AI service not configured' });
+        }
 
-        // With this:
-        // axios.post(`${process.env.AI_SERVICE_URL}/chat`,
-
-        const aiResponse = axios.post(`${process.env.AI_SERVICE_URL}/chat`, {
+        const aiResponse = await axios.post(`${aiServiceUrl}/chat`, {  // ← await added
             chat_id,
             vehicle_brand:    chat.vehicle_brand,
             vehicle_model:    chat.vehicle_model,
             vehicle_year:     chat.vehicle_year,
-            // Only send role + content to AI — don't send resource_links
             messages: allMessages.map(m => ({ role: m.role, content: m.content })),
             image_base64:     image_base64     || null,
             image_media_type: image_media_type || 'image/jpeg',
@@ -73,8 +73,8 @@ const sendMessage = async (req, res) => {
             console.log(`🚘 Vehicle updated: ${vehicle_brand} ${vehicle_model} ${vehicle_year}`);
         }
 
-        // ── Save bot reply WITH resource_links persisted to DB ─────────────
-        const safeLinks = Array.isArray(resource_links) ? resource_links : [];
+        // ── Save bot reply with resource_links ─────────────────────────────
+        const safeLinks  = Array.isArray(resource_links) ? resource_links : [];
         const botMessage = await Message.create(chat_id, 'bot', reply, safeLinks);
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -86,7 +86,7 @@ const sendMessage = async (req, res) => {
         res.status(201).json({
             message: 'Message sent successfully',
             userMessage,
-            botMessage,   // already has resource_links parsed as array from Message.create()
+            botMessage,
         });
 
     } catch (error) {
