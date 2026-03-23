@@ -413,3 +413,170 @@
 .upgradeBtnLabel {
     font-weight: 600;
 }
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR — RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+
+/* ── ≤ 900px: auto-collapse to icon strip (64px) ── */
+@media (max-width: 900px) {
+    .sidebar {
+        width: 64px !important;
+    }
+
+    /* Force collapsed visual state at this breakpoint */
+    .logoText,
+    .newChatBtn span:last-child,
+    .groupLabel,
+    .chatItemText,
+    .chatItemMeta,
+    .deleteBtn,
+    .dashboardBtnLabel,
+    .upgradeBtnLabel,
+    .userName,
+    .signOutBtn {
+        display: none !important;
+    }
+
+    .header {
+        justify-content: center;
+        padding: 0 12px;
+    }
+
+    .newChatWrap {
+        padding: 10px 8px;
+    }
+
+    .newChatBtn {
+        justify-content: center;
+        padding: 9px;
+    }
+
+    .chatItem {
+        padding: 9px;
+        justify-content: center;
+    }
+
+    .chatItemInner {
+        justify-content: center;
+    }
+
+    .footer {
+        padding: 10px 8px;
+    }
+
+    .dashboardBtn {
+        justify-content: center;
+        padding: 8px;
+    }
+
+    .upgradeBtn {
+        justify-content: center;
+        padding: 8px;
+    }
+
+    .userRow {
+        justify-content: center;
+    }
+
+    .collapseBtn {
+        display: none; /* hide manual toggle — auto-collapsed */
+    }
+}
+
+/* ── ≤ 640px: sidebar becomes horizontal top nav bar ── */
+@media (max-width: 640px) {
+    .sidebar {
+        width: 100% !important;
+        height: 56px !important;
+        flex-direction: row !important;
+        align-items: center;
+        padding: 0 12px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        gap: 8px;
+        overflow: visible;
+        z-index: 30;
+        position: sticky;
+        top: 0;
+    }
+
+    /* Keep logo visible */
+    .header {
+        height: auto;
+        border-bottom: none;
+        padding: 0;
+        flex-shrink: 0;
+        width: auto;
+    }
+
+    .logoText {
+        display: block !important;
+        font-size: 14px;
+    }
+
+    /* Hide the scrollable list entirely on mobile */
+    .chatList {
+        display: none;
+    }
+
+    /* Footer buttons become a horizontal right-side row */
+    .footer {
+        border-top: none;
+        padding: 0;
+        flex-direction: row;
+        align-items: center;
+        margin-left: auto;
+        gap: 6px;
+        flex-shrink: 0;
+    }
+
+    .upgradeBtn {
+        width: auto;
+        padding: 6px 10px;
+        font-size: 11px;
+        margin-bottom: 0;
+        border-radius: 8px;
+    }
+
+    .upgradeBtnLabel {
+        display: none !important;
+    }
+
+    .dashboardBtn {
+        width: auto;
+        padding: 6px 8px;
+        font-size: 18px;
+        margin-bottom: 0;
+    }
+
+    .dashboardBtnLabel {
+        display: none !important;
+    }
+
+    .newChatWrap {
+        padding: 0;
+        flex-shrink: 0;
+    }
+
+    .newChatBtn {
+        width: auto;
+        padding: 6px 12px;
+        font-size: 11px;
+        border-radius: 8px;
+    }
+
+    .userRow {
+        flex-shrink: 0;
+    }
+
+    .userName,
+    .signOutBtn,
+    .collapseBtn {
+        display: none !important;
+    }
+
+    /* Stack newChatWrap + footer inline */
+    .sidebar > * {
+        flex-shrink: 0;
+    }
+}

@@ -307,3 +307,89 @@ h1, h2, h3, h4, h5, h6 {
   color: #e0e0f0;
 }
 .markdown-body tr:last-child td { border-bottom: none; }
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — globals.css
+   Breakpoints:
+     lg  ≤ 1200px  (hide AdBanner, compact sidebar)
+     md  ≤ 900px   (stack sidebar as overlay / drawer)
+     sm  ≤ 640px   (mobile — single column, adjusted padding)
+     xs  ≤ 400px   (small phones)
+═══════════════════════════════════════════════════════════ */
+
+/* ── Large — hide ad rail, let chat breathe ── */
+@media (max-width: 1200px) {
+  .app-shell {
+    /* AdBanner hides itself; nothing extra needed */
+  }
+}
+
+/* ── Medium — sidebar collapses to icon strip by default ── */
+@media (max-width: 900px) {
+  body {
+    overflow: hidden;
+  }
+
+  .page-header {
+    padding: 0 16px;
+    height: 56px;
+  }
+
+  .page-content {
+    padding: 16px;
+  }
+}
+
+/* ── Small — mobile layout ── */
+@media (max-width: 640px) {
+  body {
+    overflow: auto; /* allow natural scroll on mobile */
+  }
+
+  .app-shell {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .sidebar {
+    width: 100% !important;
+    height: auto;
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+    overflow: visible;
+  }
+
+  .sidebar-chat-list {
+    display: none; /* hidden in mobile bottom-nav mode */
+  }
+
+  .page-main {
+    height: auto;
+    min-height: 0;
+    flex: 1;
+    overflow: visible;
+  }
+
+  .chat-messages {
+    overflow: visible;
+    padding: 16px;
+  }
+
+  .chat-input-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+  }
+
+  .page-content {
+    padding: 12px;
+  }
+
+  .page-header {
+    height: 52px;
+    padding: 0 12px;
+  }
+}

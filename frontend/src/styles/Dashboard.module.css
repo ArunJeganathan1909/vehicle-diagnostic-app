@@ -261,3 +261,176 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 20px rgba(108, 99, 255, 0.3);
 }
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD — RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+
+/* ── ≤ 1200px: slightly tighter grid ── */
+@media (max-width: 1200px) {
+    .chatGrid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+}
+
+/* ── ≤ 900px: compact header, tighter content ── */
+@media (max-width: 900px) {
+    .header {
+        height: 56px;
+        padding: 0 16px;
+    }
+
+    .headerTitle {
+        font-size: 15px;
+    }
+
+    .newBtn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+
+    .content {
+        padding: 16px 16px 32px;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .statCard {
+        padding: 12px 14px;
+    }
+
+    .statValue {
+        font-size: 20px;
+    }
+
+    .chatGrid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+}
+
+/* ── ≤ 640px: single column mobile ── */
+@media (max-width: 640px) {
+    .shell {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .main {
+        height: auto;
+        overflow: visible;
+    }
+
+    .header {
+        height: 52px;
+        padding: 0 12px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .headerTitle {
+        font-size: 14px;
+    }
+
+    .headerSub {
+        display: none;
+    }
+
+    .newBtn {
+        padding: 7px 12px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .content {
+        padding: 12px 12px 40px;
+        overflow: visible;
+        min-height: 0;
+        flex: 1;
+    }
+
+    /* Stats row: 3 equal cols */
+    .statsGrid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .statCard {
+        padding: 10px;
+        gap: 8px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .statIcon {
+        font-size: 16px;
+    }
+
+    .statValue {
+        font-size: 18px;
+    }
+
+    .statLabel {
+        font-size: 10px;
+    }
+
+    /* Cards: 2 column grid */
+    .chatGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .cardTitle {
+        font-size: 12px;
+    }
+
+    .cardIcon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        border-radius: 8px;
+    }
+
+    /* Empty state */
+    .empty {
+        padding-top: 48px;
+    }
+
+    .emptyIcon {
+        width: 60px;
+        height: 60px;
+        font-size: 26px;
+        border-radius: 14px;
+    }
+
+    .emptyTitle {
+        font-size: 16px;
+    }
+
+    .emptyDesc {
+        font-size: 12px;
+    }
+}
+
+/* ── ≤ 400px: single column card grid ── */
+@media (max-width: 400px) {
+    .chatGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

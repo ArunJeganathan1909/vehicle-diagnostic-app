@@ -652,3 +652,156 @@
     flex-shrink: 0;
     opacity: 0.6;
 }
+/* ═══════════════════════════════════════════════════════════
+   CHAT PAGE — RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+
+/* ── ≤ 1200px: hide ad panel (already handled in AdBanner) ── */
+@media (max-width: 1200px) {
+    .shell {
+        /* AdBanner hides via its own media query */
+    }
+}
+
+/* ── ≤ 900px: tighter header & input ── */
+@media (max-width: 900px) {
+    .header {
+        height: 56px;
+        padding: 0 16px;
+    }
+
+    .headerTitle {
+        font-size: 14px;
+    }
+
+    .messages {
+        padding: 16px;
+    }
+
+    .messagesInner {
+        max-width: 100%;
+    }
+
+    .inputBar {
+        padding: 10px 14px 12px;
+    }
+
+    .inputInner {
+        max-width: 100%;
+    }
+
+    .resolveBtn {
+        font-size: 11px;
+        padding: 4px 9px;
+    }
+}
+
+/* ── ≤ 640px: full mobile ── */
+@media (max-width: 640px) {
+    .shell {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .chatShell {
+        height: auto;
+        min-height: 0;
+        flex: 1;
+    }
+
+    .header {
+        height: 52px;
+        padding: 0 12px;
+        gap: 8px;
+    }
+
+    .headerTitle {
+        font-size: 13px;
+    }
+
+    .headerSub {
+        display: none;
+    }
+
+    .statusBadge {
+        font-size: 10px;
+        padding: 2px 7px;
+    }
+
+    .messages {
+        /* Natural scroll on mobile */
+        flex: 1;
+        overflow-y: visible;
+        padding: 12px;
+    }
+
+    .messagesInner {
+        max-width: 100%;
+        gap: 2px;
+    }
+
+    /* Tighter bubble padding on small screens */
+    .bubble {
+        font-size: 13px;
+        padding: 9px 12px;
+    }
+
+    .bubbleRowBot {
+        padding-right: 24px;
+    }
+
+    .bubbleRowUser {
+        padding-left: 24px;
+    }
+
+    .bubbleContainer {
+        max-width: 90%;
+    }
+
+    /* Input bar sticks to bottom */
+    .inputBar {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        padding: 8px 12px 10px;
+    }
+
+    .textarea {
+        font-size: 16px; /* prevent iOS zoom */
+    }
+
+    .cameraBtn,
+    .sendBtn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .footer {
+        font-size: 10px;
+    }
+
+    /* Resource cards */
+    .resourcesCard {
+        margin-top: 8px;
+    }
+
+    .videoItem {
+        padding: 6px 8px;
+    }
+}
+
+/* ── ≤ 400px: extra small phones ── */
+@media (max-width: 400px) {
+    .headerTitle {
+        font-size: 12px;
+        max-width: 140px;
+    }
+
+    .bubble {
+        font-size: 12px;
+    }
+
+    .bubbleRowBot  { padding-right: 12px; }
+    .bubbleRowUser { padding-left: 12px; }
+}

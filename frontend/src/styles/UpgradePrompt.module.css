@@ -165,3 +165,49 @@
     background: rgba(0, 116, 217, 0.06);
     border: 1px solid rgba(0, 116, 217, 0.12);
 }
+/* ═══════════════════════════════════════════════════════════
+   UPGRADE PROMPT — RESPONSIVE
+═══════════════════════════════════════════════════════════ */
+
+/* ── ≤ 640px: bottom sheet style ── */
+@media (max-width: 640px) {
+    .overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .card {
+        border-radius: 20px 20px 0 0;
+        max-width: 100%;
+        width: 100%;
+        padding: 28px 20px 32px;
+        border-bottom: none;
+    }
+
+    .compareHeader,
+    .compareRow {
+        grid-template-columns: 1fr 56px 56px 56px;
+        padding: 7px 10px;
+    }
+
+    .title {
+        font-size: 18px;
+    }
+
+    .desc {
+        font-size: 12px;
+    }
+}
+
+/* ── ≤ 400px ── */
+@media (max-width: 400px) {
+    .compareHeader,
+    .compareRow {
+        grid-template-columns: 1fr 48px 48px 48px;
+        font-size: 10px;
+    }
+
+    .compareLabel {
+        font-size: 11px;
+    }
+}

@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4ea94320-7973-42bd-88ad-10138ceb9b8b" name="Changes" comment="fix: use env vars for Firebase, remove service account key from repo">
+    <list default="true" id="4ea94320-7973-42bd-88ad-10138ceb9b8b" name="Changes" comment="updated message model">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/firebase.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/firebase.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Chat.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Chat.module.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Dashboard.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Dashboard.module.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Pricing.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Pricing.module.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Sidebar.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Sidebar.module.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +103,7 @@
       <workItem from="1773296505681" duration="1336000" />
       <workItem from="1773389568927" duration="676000" />
       <workItem from="1773927724284" duration="4579000" />
-      <workItem from="1774240462802" duration="11149000" />
+      <workItem from="1774240462802" duration="18299000" />
     </task>
     <task id="LOCAL-00001" summary="modified login page">
       <option name="closed" value="true" />
@@ -117,7 +121,55 @@
       <option name="project" value="LOCAL" />
       <updated>1774280482452</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="fix: use env vars for Firebase, remove service account key from repo">
+      <option name="closed" value="true" />
+      <created>1774281485890</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1774281485890</updated>
+    </task>
+    <task id="LOCAL-00004" summary="updated domins in app">
+      <option name="closed" value="true" />
+      <created>1774290638893</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1774290638893</updated>
+    </task>
+    <task id="LOCAL-00005" summary="updated db">
+      <option name="closed" value="true" />
+      <created>1774292740709</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1774292740709</updated>
+    </task>
+    <task id="LOCAL-00006" summary="updated ai services in message">
+      <option name="closed" value="true" />
+      <created>1774293583559</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1774293583559</updated>
+    </task>
+    <task id="LOCAL-00007" summary="updated ai services in message controller">
+      <option name="closed" value="true" />
+      <created>1774295187982</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1774295187982</updated>
+    </task>
+    <task id="LOCAL-00008" summary="updated message model">
+      <option name="closed" value="true" />
+      <created>1774296245417</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1774296245419</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -126,6 +178,11 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="modified login page" />
     <MESSAGE value="fix: use env vars for Firebase, remove service account key from repo" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix: use env vars for Firebase, remove service account key from repo" />
+    <MESSAGE value="updated domins in app" />
+    <MESSAGE value="updated db" />
+    <MESSAGE value="updated ai services in message" />
+    <MESSAGE value="updated ai services in message controller" />
+    <MESSAGE value="updated message model" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated message model" />
   </component>
 </project>
