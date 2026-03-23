@@ -11,9 +11,10 @@ const app = express();
 
 app.use(cors({
     origin: [
-        'http://localhost:3000',               // local dev
-        'https://autodiag.vercel.app',         // production frontend
-        'https://your-custom-domain.com',      // if you have one
+        'http://localhost:3000',
+        'http://localhost:5000',
+        'https://vehicle-diagnostic-app.vercel.app',
+        'https://autodiag-backend.onrender.com',
     ],
     credentials: true,
 }));
