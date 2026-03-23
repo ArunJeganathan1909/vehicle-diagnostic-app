@@ -415,15 +415,19 @@
 }
 /* ═══════════════════════════════════════════════════════════
    SIDEBAR — RESPONSIVE
+   Desktop (>900px):  full 260px sidebar, collapsible to 64px
+   Tablet (≤900px):   collapsed to 64px icon strip
+   Mobile (≤640px):   completely hidden — slides in as a drawer
+                       overlay triggered by hamburger in header,
+                       identical to claude.ai mobile behaviour
 ═══════════════════════════════════════════════════════════ */
 
-/* ── ≤ 900px: auto-collapse to icon strip (64px) ── */
+/* ── ≤ 900px: icon strip ── */
 @media (max-width: 900px) {
     .sidebar {
         width: 64px !important;
     }
 
-    /* Force collapsed visual state at this breakpoint */
     .logoText,
     .newChatBtn span:last-child,
     .groupLabel,
@@ -437,146 +441,143 @@
         display: none !important;
     }
 
-    .header {
-        justify-content: center;
-        padding: 0 12px;
-    }
-
-    .newChatWrap {
-        padding: 10px 8px;
-    }
-
-    .newChatBtn {
-        justify-content: center;
-        padding: 9px;
-    }
-
-    .chatItem {
-        padding: 9px;
-        justify-content: center;
-    }
-
-    .chatItemInner {
-        justify-content: center;
-    }
-
-    .footer {
-        padding: 10px 8px;
-    }
-
-    .dashboardBtn {
-        justify-content: center;
-        padding: 8px;
-    }
-
-    .upgradeBtn {
-        justify-content: center;
-        padding: 8px;
-    }
-
-    .userRow {
-        justify-content: center;
-    }
-
-    .collapseBtn {
-        display: none; /* hide manual toggle — auto-collapsed */
-    }
+    .header        { justify-content: center; padding: 0 12px; }
+    .newChatWrap   { padding: 10px 8px; }
+    .newChatBtn    { justify-content: center; padding: 9px; }
+    .chatItem      { padding: 9px; justify-content: center; }
+    .chatItemInner { justify-content: center; }
+    .footer        { padding: 10px 8px; }
+    .dashboardBtn  { justify-content: center; padding: 8px; }
+    .upgradeBtn    { justify-content: center; padding: 8px; }
+    .userRow       { justify-content: center; }
+    .collapseBtn   { display: none; }
 }
 
-/* ── ≤ 640px: sidebar becomes horizontal top nav bar ── */
+/* ── ≤ 640px: off-canvas drawer (claude.ai style) ── */
 @media (max-width: 640px) {
+    /*
+     * The sidebar slides in from the left as an overlay.
+     * It starts translated off-screen (transform: translateX(-100%)).
+     * When the JS adds data-open="true", it slides in.
+     * A dark backdrop appears behind it.
+     * The chat content stays full-width underneath — no layout shift.
+     *
+     * To wire this up in Sidebar.js:
+     *   1. Add a ref or state: const [mobileOpen, setMobileOpen] = useState(false)
+     *   2. Pass mobileOpen as a prop and apply it:
+     *        <aside ... data-open={mobileOpen ? 'true' : 'false'}>
+     *   3. Add a hamburger button to the Chat header that calls setMobileOpen(true)
+     *   4. The .backdrop click sets mobileOpen(false)
+     */
+
     .sidebar {
-        width: 100% !important;
-        height: 56px !important;
-        flex-direction: row !important;
-        align-items: center;
-        padding: 0 12px;
-        border-right: none;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        gap: 8px;
-        overflow: visible;
-        z-index: 30;
-        position: sticky;
-        top: 0;
+        /* Reset tablet overrides */
+        width: 280px !important;
+        height: 100vh !important;
+        flex-direction: column !important;
+
+        /* Off-canvas positioning */
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 100 !important;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.28s ease !important;
+        box-shadow: none;
+
+        /* Full sidebar content visible when open */
+        border-right: 1px solid rgba(255,255,255,0.08) !important;
     }
 
-    /* Keep logo visible */
-    .header {
-        height: auto;
-        border-bottom: none;
-        padding: 0;
-        flex-shrink: 0;
-        width: auto;
+    /* Drawer open state — toggled via JS by adding data-open="true" */
+    .sidebar[data-open="true"] {
+        transform: translateX(0) !important;
+        box-shadow: 8px 0 40px rgba(0, 0, 0, 0.6) !important;
     }
 
-    .logoText {
+    /* Restore full sidebar labels when drawer is open */
+    .sidebar[data-open="true"] .logoText,
+    .sidebar[data-open="true"] .groupLabel,
+    .sidebar[data-open="true"] .chatItemText,
+    .sidebar[data-open="true"] .chatItemMeta,
+    .sidebar[data-open="true"] .dashboardBtnLabel,
+    .sidebar[data-open="true"] .upgradeBtnLabel,
+    .sidebar[data-open="true"] .userName,
+    .sidebar[data-open="true"] .signOutBtn {
         display: block !important;
-        font-size: 14px;
     }
 
-    /* Hide the scrollable list entirely on mobile */
-    .chatList {
+    .sidebar[data-open="true"] .newChatBtn span:last-child { display: inline !important; }
+    .sidebar[data-open="true"] .deleteBtn                   { display: flex !important; }
+    .sidebar[data-open="true"] .header     { justify-content: space-between; padding: 0 14px 0 16px; }
+    .sidebar[data-open="true"] .newChatBtn { justify-content: flex-start; padding: 9px 12px; }
+    .sidebar[data-open="true"] .chatItem   { justify-content: space-between; padding: 8px 9px; }
+    .sidebar[data-open="true"] .chatItemInner { justify-content: flex-start; }
+    .sidebar[data-open="true"] .footer     { padding: 10px; }
+    .sidebar[data-open="true"] .dashboardBtn { justify-content: flex-start; padding: 7px 10px; }
+    .sidebar[data-open="true"] .upgradeBtn   { justify-content: flex-start; padding: 8px 10px; }
+    .sidebar[data-open="true"] .userRow      { justify-content: space-between; }
+    .sidebar[data-open="true"] .collapseBtn  { display: flex; }
+
+    /* Dark backdrop — rendered as a sibling div by Sidebar.js */
+    .backdrop {
         display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        z-index: 99;
+        animation: fadeInBackdrop 0.25s ease forwards;
     }
 
-    /* Footer buttons become a horizontal right-side row */
-    .footer {
-        border-top: none;
-        padding: 0;
-        flex-direction: row;
+    .backdrop[data-visible="true"] {
+        display: block;
+    }
+
+    @keyframes fadeInBackdrop {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    /* Hamburger button — rendered inside Chat header via JS */
+    .hamburgerBtn {
+        display: flex;
         align-items: center;
-        margin-left: auto;
-        gap: 6px;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: transparent;
+        cursor: pointer;
         flex-shrink: 0;
+        transition: all 0.18s;
+        gap: 0;
+        flex-direction: column;
+        padding: 9px 8px;
     }
 
-    .upgradeBtn {
-        width: auto;
-        padding: 6px 10px;
-        font-size: 11px;
-        margin-bottom: 0;
-        border-radius: 8px;
+    .hamburgerBtn:hover {
+        background: rgba(108, 99, 255, 0.1);
+        border-color: rgba(108, 99, 255, 0.25);
     }
 
-    .upgradeBtnLabel {
-        display: none !important;
+    .hamburgerLine {
+        width: 16px;
+        height: 1.5px;
+        background: #9a9ab8;
+        border-radius: 2px;
+        transition: all 0.2s;
     }
 
-    .dashboardBtn {
-        width: auto;
-        padding: 6px 8px;
-        font-size: 18px;
-        margin-bottom: 0;
+    .hamburgerLine + .hamburgerLine {
+        margin-top: 4px;
     }
 
-    .dashboardBtnLabel {
-        display: none !important;
-    }
-
-    .newChatWrap {
-        padding: 0;
-        flex-shrink: 0;
-    }
-
-    .newChatBtn {
-        width: auto;
-        padding: 6px 12px;
-        font-size: 11px;
-        border-radius: 8px;
-    }
-
-    .userRow {
-        flex-shrink: 0;
-    }
-
-    .userName,
-    .signOutBtn,
+    /* Hide desktop collapse button on mobile */
     .collapseBtn {
         display: none !important;
-    }
-
-    /* Stack newChatWrap + footer inline */
-    .sidebar > * {
-        flex-shrink: 0;
     }
 }

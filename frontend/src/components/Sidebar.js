@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getChats, createChat, deleteChat } from '@/lib/api';
@@ -20,17 +20,39 @@ const formatDate = (dateStr) => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-export default function Sidebar({ activeChatId, onChatsLoaded }) {
+export default function Sidebar({ activeChatId, onChatsLoaded, mobileOpen, onMobileClose }) {
     const { user, logout } = useAuth();
     const router           = useRouter();
     const pathname         = usePathname();
-    const [chats,        setChats]        = useState([]);
-    const [loading,      setLoading]      = useState(true);
-    const [creating,     setCreating]     = useState(false);
-    const [collapsed,    setCollapsed]    = useState(false);
-    const [upgradePrompt,setUpgradePrompt]= useState(null); // 'CHAT_LIMIT_REACHED' | null
+    const [chats,         setChats]         = useState([]);
+    const [loading,       setLoading]       = useState(true);
+    const [creating,      setCreating]      = useState(false);
+    const [collapsed,     setCollapsed]     = useState(false);
+    const [upgradePrompt, setUpgradePrompt] = useState(null);
 
     useEffect(() => { loadChats(); }, []);
+
+    // Close drawer on route change (mobile)
+    useEffect(() => {
+        onMobileClose?.();
+    }, [pathname]);
+
+    // Close on Escape key
+    useEffect(() => {
+        const onKey = (e) => { if (e.key === 'Escape') onMobileClose?.(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onMobileClose]);
+
+    // Prevent body scroll when drawer is open on mobile
+    useEffect(() => {
+        if (mobileOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [mobileOpen]);
 
     const loadChats = async () => {
         try {
@@ -49,7 +71,6 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
             setChats(prev => [c, ...prev]);
             router.push(`/chat/${c.id}`);
         } catch (err) {
-            // ── Catch plan limit error from backend ──────────────────────
             const code = err.response?.data?.code;
             if (code === 'CHAT_LIMIT_REACHED') {
                 setUpgradePrompt('CHAT_LIMIT_REACHED');
@@ -87,10 +108,23 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
     const g = groupChats(chats);
     const W = collapsed ? 64 : 260;
 
+    // On mobile, the sidebar ignores the collapsed state — CSS controls it via data-open
     return (
         <>
-            <aside className={s.sidebar} style={{ width: W }}>
+            {/* ── Dark backdrop (mobile only) ── */}
+            <div
+                className={s.backdrop}
+                data-visible={mobileOpen ? 'true' : 'false'}
+                onClick={onMobileClose}
+                aria-hidden="true"
+            />
 
+            <aside
+                className={s.sidebar}
+                style={{ width: W }}
+                data-open={mobileOpen ? 'true' : 'false'}
+                aria-label="Navigation sidebar"
+            >
                 {/* ── Logo + collapse ── */}
                 <div className={`${s.header} ${collapsed ? s.headerCollapsed : ''}`}>
                     {!collapsed && (
@@ -99,8 +133,11 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                             <span className={s.logoText}>AutoDiag</span>
                         </div>
                     )}
-                    <button className={s.collapseBtn} onClick={() => setCollapsed(p => !p)}
-                            title={collapsed ? 'Expand' : 'Collapse'}>
+                    <button
+                        className={s.collapseBtn}
+                        onClick={() => setCollapsed(p => !p)}
+                        title={collapsed ? 'Expand' : 'Collapse'}
+                    >
                         {collapsed ? '→' : '←'}
                     </button>
                 </div>
@@ -118,7 +155,7 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                     </button>
                 </div>
 
-                {/* ── Chat list (scrolls independently) ── */}
+                {/* ── Chat list ── */}
                 <div className={s.chatList}>
                     {loading ? (
                         <div className={s.loaderWrap}>
@@ -136,11 +173,13 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                                     <div key={label} className={s.group}>
                                         {!collapsed && <p className={s.groupLabel}>{label}</p>}
                                         {items.map(chat => (
-                                            <ChatItem key={chat.id} chat={chat}
-                                                      isActive={String(activeChatId) === String(chat.id)}
-                                                      collapsed={collapsed}
-                                                      onDelete={handleDelete}
-                                                      onClick={() => router.push(`/chat/${chat.id}`)}
+                                            <ChatItem
+                                                key={chat.id}
+                                                chat={chat}
+                                                isActive={String(activeChatId) === String(chat.id)}
+                                                collapsed={collapsed}
+                                                onDelete={handleDelete}
+                                                onClick={() => router.push(`/chat/${chat.id}`)}
                                             />
                                         ))}
                                     </div>
@@ -151,8 +190,6 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
 
                 {/* ── Footer ── */}
                 <div className={`${s.footer} ${collapsed ? s.footerCollapsed : ''}`}>
-
-                    {/* 💎 Upgrade / Pricing button */}
                     <button
                         onClick={() => router.push('/pricing')}
                         className={`${s.upgradeBtn} ${collapsed ? s.upgradeBtnCollapsed : ''} ${pathname === '/pricing' ? s.upgradeBtnActive : ''}`}
@@ -162,7 +199,6 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                         {!collapsed && <span className={s.upgradeBtnLabel}>Upgrade Plan</span>}
                     </button>
 
-                    {/* Dashboard link */}
                     <button
                         className={`${s.dashboardBtn} ${collapsed ? s.dashboardBtnCollapsed : ''} ${pathname === '/dashboard' ? s.dashboardBtnActive : ''}`}
                         onClick={() => router.push('/dashboard')}
@@ -172,7 +208,6 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                         {!collapsed && <span className={s.dashboardBtnLabel}>Dashboard</span>}
                     </button>
 
-                    {/* User row */}
                     <div className={`${s.userRow} ${collapsed ? s.userRowCollapsed : ''}`}>
                         <div className={s.userInfo}>
                             {user?.photoURL
@@ -188,7 +223,6 @@ export default function Sidebar({ activeChatId, onChatsLoaded }) {
                 </div>
             </aside>
 
-            {/* ── Upgrade prompt modal ── */}
             {upgradePrompt && (
                 <UpgradePrompt
                     type={upgradePrompt}

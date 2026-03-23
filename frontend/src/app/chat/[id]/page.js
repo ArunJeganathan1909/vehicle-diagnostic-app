@@ -17,13 +17,19 @@ export default function ChatPage() {
 
 function ChatLayout() {
     const { id } = useParams();
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const closeMobile = useCallback(() => setMobileOpen(false), []);
+
     return (
         <div className={s.shell}>
-            <Sidebar activeChatId={id} />
+            <Sidebar
+                activeChatId={id}
+                mobileOpen={mobileOpen}
+                onMobileClose={closeMobile}
+            />
             <div className={s.chatShell}>
-                <Chat id={id} />
+                <Chat id={id} onOpenMenu={() => setMobileOpen(true)} />
             </div>
-
             <AdBanner slot="vertical" />
         </div>
     );
@@ -60,7 +66,7 @@ function formatBotContent(content) {
 }
 
 /* ── Chat ── */
-function Chat({ id }) {
+function Chat({ id, onOpenMenu }) {
     const router = useRouter();
     const [chat,          setChat]          = useState(null);
     const [messages,      setMessages]      = useState([]);
@@ -150,7 +156,7 @@ function Chat({ id }) {
                 prev.filter(m => m.id !== 'typing' && !m.isTemp)
                     .concat([
                         { ...userMessage, imagePreview: capturedPreview },
-                        botMessage,   // includes resource_links from backend
+                        botMessage,
                     ])
             );
             const chatRes = await getChat(id);
@@ -194,21 +200,43 @@ function Chat({ id }) {
 
     return (
         <>
+            {/* ── Fixed Header ── */}
             <header className={s.header}>
                 <div className={s.headerLeft}>
-                    <div className={s.headerTitle}>{chat?.title || 'New Vehicle Chat'}</div>
-                    {vehicleLabel && <div className={s.headerSub}>{vehicleLabel}</div>}
+                    {/* Hamburger — only visible on mobile via CSS */}
+                    <button
+                        className={s.menuBtn}
+                        onClick={onOpenMenu}
+                        aria-label="Open sidebar"
+                    >
+                        <span className={s.menuBtnLine} />
+                        <span className={s.menuBtnLine} />
+                        <span className={s.menuBtnLine} />
+                    </button>
+
+                    <div className={s.headerTitleWrap}>
+                        <div className={s.headerTitle}>
+                            {vehicleLabel || chat?.title || 'New Diagnostic'}
+                        </div>
+                        {vehicleLabel && chat?.title && chat.title !== vehicleLabel && (
+                            <div className={s.headerSub}>{chat.title}</div>
+                        )}
+                    </div>
                 </div>
+
                 <div className={s.headerRight}>
                     <span className={`${s.statusBadge} ${resolved ? s.statusResolved : s.statusActive}`}>
                         {resolved ? '✓ Resolved' : '● Active'}
                     </span>
                     {!resolved && chat?.vehicle_brand && (
-                        <button className={s.resolveBtn} onClick={handleResolve}>Mark Resolved</button>
+                        <button className={s.resolveBtn} onClick={handleResolve}>
+                            Mark Resolved
+                        </button>
                     )}
                 </div>
             </header>
 
+            {/* ── Scrollable Messages ── */}
             <div className={s.messages}>
                 <div className={s.messagesInner}>
                     {messages.map((msg, i) => (
@@ -218,6 +246,7 @@ function Chat({ id }) {
                 </div>
             </div>
 
+            {/* ── Fixed Input Bar ── */}
             <div className={s.inputBar}>
                 <div className={s.inputInner}>
                     {imagePreview && (
@@ -232,13 +261,21 @@ function Chat({ id }) {
                     )}
 
                     <div className={s.inputRow}>
-                        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} style={{ display: 'none' }} />
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageSelect}
+                            style={{ display: 'none' }}
+                        />
                         <button
                             className={`${s.cameraBtn} ${imagePreview ? s.cameraBtnActive : ''}`}
                             onClick={() => fileInputRef.current?.click()}
                             disabled={resolved}
                             title="Upload dashboard image"
-                        >📷</button>
+                        >
+                            📷
+                        </button>
 
                         <div className={`${s.textareaWrap} ${focused ? s.textareaWrapFocused : ''}`}>
                             <textarea
@@ -283,7 +320,7 @@ function Chat({ id }) {
     );
 }
 
-/* ── Resource Links component ── */
+/* ── Resource Links ── */
 function ResourceLinks({ links }) {
     if (!links || links.length === 0) return null;
 
@@ -367,7 +404,9 @@ function MessageBubble({ msg, prevMsg }) {
     return (
         <div className={rowClass}>
             {isBot && (
-                <div className={`${s.botAvatar} ${showAvatar ? '' : s.botAvatarHidden}`}>🔧</div>
+                <div className={`${s.botAvatar} ${showAvatar ? '' : s.botAvatarHidden}`}>
+                    🔧
+                </div>
             )}
             <div className={s.bubbleContainer}>
 
@@ -404,7 +443,6 @@ function MessageBubble({ msg, prevMsg }) {
                     )}
                 </div>
 
-                {/* Resource links — only for bot messages with links */}
                 {isBot && !isTyping && msg.resource_links?.length > 0 && (
                     <ResourceLinks links={msg.resource_links} />
                 )}
