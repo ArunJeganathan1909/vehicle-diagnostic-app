@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4ea94320-7973-42bd-88ad-10138ceb9b8b" name="Changes" comment="modified login page">
+    <list default="true" id="4ea94320-7973-42bd-88ad-10138ceb9b8b" name="Changes" comment="fix: use env vars for Firebase, remove service account key from repo">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config/db.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/db.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/config/firebase.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/config/firebase.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,7 +99,7 @@
       <workItem from="1773296505681" duration="1336000" />
       <workItem from="1773389568927" duration="676000" />
       <workItem from="1773927724284" duration="4579000" />
-      <workItem from="1774240462802" duration="7511000" />
+      <workItem from="1774240462802" duration="11149000" />
     </task>
     <task id="LOCAL-00001" summary="modified login page">
       <option name="closed" value="true" />
@@ -110,7 +109,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773929441772</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="fix: use env vars for Firebase, remove service account key from repo">
+      <option name="closed" value="true" />
+      <created>1774280482452</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1774280482452</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -118,6 +125,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="modified login page" />
-    <option name="LAST_COMMIT_MESSAGE" value="modified login page" />
+    <MESSAGE value="fix: use env vars for Firebase, remove service account key from repo" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: use env vars for Firebase, remove service account key from repo" />
   </component>
 </project>
