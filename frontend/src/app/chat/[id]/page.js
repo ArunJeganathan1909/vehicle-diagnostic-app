@@ -9,6 +9,7 @@ import { getChat, sendMessage, resolveChat } from '@/lib/api';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 import s from '@/styles/Chat.module.css';
+import AdBanner from "@/components/AdBanner";
 
 export default function ChatPage() {
     return <ProtectedRoute><ChatLayout /></ProtectedRoute>;
@@ -22,6 +23,8 @@ function ChatLayout() {
             <div className={s.chatShell}>
                 <Chat id={id} />
             </div>
+
+            <AdBanner slot="vertical" />
         </div>
     );
 }

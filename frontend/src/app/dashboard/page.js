@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Sidebar from '@/components/Sidebar';
+import AdBanner from '@/components/AdBanner';
 import { createChat } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -22,8 +23,14 @@ function Dashboard() {
         try {
             const res = await createChat();
             router.push(`/chat/${res.data.chat.id}`);
-        } catch {
-            toast.error('Failed to create new chat');
+        } catch (err) {
+            const code = err.response?.data?.code;
+            if (code === 'CHAT_LIMIT_REACHED') {
+                toast.error('Free plan limit reached — upgrade to continue!');
+                setTimeout(() => router.push('/pricing'), 1500);
+            } else {
+                toast.error('Failed to create new chat');
+            }
             setCreating(false);
         }
     };
@@ -39,11 +46,11 @@ function Dashboard() {
     };
 
     return (
+        /* app-shell = full-viewport flex row */
         <div className={s.shell}>
             <Sidebar onChatsLoaded={setChats} />
 
             <main className={s.main}>
-                {/* Header */}
                 <header className={s.header}>
                     <div>
                         <h1 className={s.headerTitle}>My Diagnostics</h1>
@@ -54,7 +61,6 @@ function Dashboard() {
                     </button>
                 </header>
 
-                {/* Scrollable content */}
                 <div className={s.content}>
                     {chats.length === 0 ? (
                         <EmptyState onNew={handleNewChat} />
@@ -86,6 +92,9 @@ function Dashboard() {
                     )}
                 </div>
             </main>
+
+            {/* Ad panel — only renders for free/pro users */}
+            <AdBanner slot="vertical" />
         </div>
     );
 }

@@ -1,0 +1,148 @@
+/* ═══════════════════════════════════════════
+   AD BANNER PANEL — right side panel
+   Shown for free + pro users only
+═══════════════════════════════════════════ */
+
+.panel {
+    width: 200px;
+    flex-shrink: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    background: #0a0a12;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 12px;
+}
+
+/* ── Upgrade nudge ── */
+.nudge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(108, 99, 255, 0.08);
+    border: 1px solid rgba(108, 99, 255, 0.2);
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+.nudgeIcon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.nudgeTitle {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #f0f0f8;
+    line-height: 1.2;
+}
+
+.nudgeSub {
+    font-size: 10px;
+    color: #7a7a9a;
+    margin-top: 1px;
+}
+
+.nudgeBtn {
+    margin-left: auto;
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, #6c63ff, #a855f7);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+}
+
+.nudgeBtn:hover {
+    opacity: 0.85;
+}
+
+/* ── Ad wrap ── */
+.adWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+.adLabel {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3a3a5a;
+    padding-left: 2px;
+}
+
+/* ── Dev placeholder ── */
+.placeholder {
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.placeholderVertical {
+    height: 300px;
+}
+
+.placeholderRect {
+    height: 180px;
+}
+
+.placeholderInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.placeholderIcon {
+    font-size: 22px;
+    opacity: 0.4;
+}
+
+.placeholderText {
+    font-size: 11px;
+    font-weight: 600;
+    color: #4a4a6a;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.placeholderSize {
+    font-size: 10px;
+    font-weight: 400;
+    color: #3a3a5a;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.placeholderNote {
+    font-size: 10px;
+    color: #2a2a4a;
+}
+
+/* ── Responsive — hide on narrow screens ── */
+@media (max-width: 1200px) {
+    .panel {
+        display: none;
+    }
+}
