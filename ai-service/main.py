@@ -14,7 +14,7 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5000",
         "https://autodiag-backend.onrender.com",
-        "https://vehicle-diagnostic-app.vercel.app/",
+        "https://vehicle-diagnostic-app.vercel.app",  # ← added
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -40,7 +40,7 @@ class MessageResponse(BaseModel):
     vehicle_brand:  Optional[str] = None
     vehicle_model:  Optional[str] = None
     vehicle_year:   Optional[str] = None
-    resource_links: Optional[List[ResourceLink]] = []   # ← new field
+    resource_links: Optional[List[ResourceLink]] = []
 
 @app.get("/")
 def root():
@@ -66,11 +66,9 @@ async def chat(request: MessageRequest):
             image_media_type=request.image_media_type or "image/jpeg",
         )
 
-        # Always cast vehicle_year to string
         if result.get("vehicle_year") is not None:
             result["vehicle_year"] = str(result["vehicle_year"])
 
-        # Ensure resource_links always present
         if "resource_links" not in result:
             result["resource_links"] = []
 
