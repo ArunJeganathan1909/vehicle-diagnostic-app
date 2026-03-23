@@ -26,7 +26,6 @@ function ChatLayout() {
     );
 }
 
-/* ── helpers ── */
 function parseSeverity(content) {
     const l = content.toLowerCase();
     if (l.includes('urgency: high')   || l.includes('**high**'))   return 'high';
@@ -68,7 +67,7 @@ function Chat({ id }) {
     const [imageFile,     setImageFile]     = useState(null);
     const [imagePreview,  setImagePreview]  = useState(null);
     const [focused,       setFocused]       = useState(false);
-    const [upgradePrompt, setUpgradePrompt] = useState(null); // error code string
+    const [upgradePrompt, setUpgradePrompt] = useState(null);
 
     const messagesEndRef = useRef(null);
     const inputRef       = useRef(null);
@@ -146,15 +145,16 @@ function Chat({ id }) {
 
             setMessages(prev =>
                 prev.filter(m => m.id !== 'typing' && !m.isTemp)
-                    .concat([{ ...userMessage, imagePreview: capturedPreview }, botMessage])
+                    .concat([
+                        { ...userMessage, imagePreview: capturedPreview },
+                        botMessage,   // includes resource_links from backend
+                    ])
             );
             const chatRes = await getChat(id);
             setChat(chatRes.data.chat);
 
         } catch (err) {
             setMessages(prev => prev.filter(m => m.id !== 'typing' && !m.isTemp));
-
-            // ── Handle plan limit errors ──────────────────────────────────
             const code = err.response?.data?.code;
             if (code === 'IMAGE_ANALYSIS_NOT_AVAILABLE' || code === 'CHAT_LIMIT_REACHED') {
                 setUpgradePrompt(code);
@@ -179,15 +179,6 @@ function Chat({ id }) {
         } catch { toast.error('Failed to resolve'); }
     };
 
-    // ── Camera button click — block free users immediately ──────────────────
-    const handleCameraClick = () => {
-        // If the chat's user is on free plan, show upgrade prompt before file picker
-        // We detect free plan by checking if image analysis has been blocked before
-        // The cleanest way: just let them try and catch the 403 from backend
-        // But for instant UX, check if we know the plan already
-        fileInputRef.current?.click();
-    };
-
     if (loading) return (
         <div className={s.loadingScreen}><div className="loader" /></div>
     );
@@ -200,7 +191,6 @@ function Chat({ id }) {
 
     return (
         <>
-            {/* ── Header ── */}
             <header className={s.header}>
                 <div className={s.headerLeft}>
                     <div className={s.headerTitle}>{chat?.title || 'New Vehicle Chat'}</div>
@@ -216,7 +206,6 @@ function Chat({ id }) {
                 </div>
             </header>
 
-            {/* ── Messages ── */}
             <div className={s.messages}>
                 <div className={s.messagesInner}>
                     {messages.map((msg, i) => (
@@ -226,10 +215,8 @@ function Chat({ id }) {
                 </div>
             </div>
 
-            {/* ── Input bar ── */}
             <div className={s.inputBar}>
                 <div className={s.inputInner}>
-
                     {imagePreview && (
                         <div className={s.imagePreviewStrip}>
                             <img src={imagePreview} alt="preview" className={s.imagePreviewThumb} />
@@ -245,7 +232,7 @@ function Chat({ id }) {
                         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} style={{ display: 'none' }} />
                         <button
                             className={`${s.cameraBtn} ${imagePreview ? s.cameraBtnActive : ''}`}
-                            onClick={handleCameraClick}
+                            onClick={() => fileInputRef.current?.click()}
                             disabled={resolved}
                             title="Upload dashboard image"
                         >📷</button>
@@ -286,14 +273,70 @@ function Chat({ id }) {
                 </div>
             </div>
 
-            {/* ── Upgrade prompt modal ── */}
             {upgradePrompt && (
-                <UpgradePrompt
-                    type={upgradePrompt}
-                    onClose={() => setUpgradePrompt(null)}
-                />
+                <UpgradePrompt type={upgradePrompt} onClose={() => setUpgradePrompt(null)} />
             )}
         </>
+    );
+}
+
+/* ── Resource Links component ── */
+function ResourceLinks({ links }) {
+    if (!links || links.length === 0) return null;
+
+    const youtubeLinks = links.filter(l => l.type === 'youtube');
+    const partsLinks   = links.filter(l => l.type === 'parts');
+
+    return (
+        <div className={s.resourceLinks}>
+            {youtubeLinks.length > 0 && (
+                <div className={s.resourceSection}>
+                    <div className={s.resourceSectionTitle}>📹 Repair Videos</div>
+                    <div className={s.resourceList}>
+                        {youtubeLinks.map((link, i) => (
+                            <a
+                                key={i}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={s.resourceLink}
+                                data-type="youtube"
+                            >
+                                <span className={s.resourceLinkIcon}>▶</span>
+                                <span className={s.resourceLinkLabel}>
+                                    {link.label.replace('🎥 ', '')}
+                                </span>
+                                <span className={s.resourceLinkArrow}>↗</span>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {partsLinks.length > 0 && (
+                <div className={s.resourceSection}>
+                    <div className={s.resourceSectionTitle}>🛒 Find Parts</div>
+                    <div className={s.resourceList}>
+                        {partsLinks.map((link, i) => (
+                            <a
+                                key={i}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={s.resourceLink}
+                                data-type="parts"
+                            >
+                                <span className={s.resourceLinkIcon}>🔩</span>
+                                <span className={s.resourceLinkLabel}>
+                                    {link.label.replace('🛒 Buy: ', '')}
+                                </span>
+                                <span className={s.resourceLinkArrow}>↗</span>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -357,6 +400,11 @@ function MessageBubble({ msg, prevMsg }) {
                         <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
                     )}
                 </div>
+
+                {/* Resource links — only for bot messages with links */}
+                {isBot && !isTyping && msg.resource_links?.length > 0 && (
+                    <ResourceLinks links={msg.resource_links} />
+                )}
             </div>
         </div>
     );

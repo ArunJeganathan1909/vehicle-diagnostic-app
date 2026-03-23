@@ -20,10 +20,7 @@ const sendMessage = async (req, res) => {
 
         // ── Block image upload for free plan ──────────────────────────────
         if (image_base64 && !User.canUseImageAnalysis(user.plan)) {
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('🚫  IMAGE UPLOAD BLOCKED — FREE PLAN');
-            console.log('  User ID :', user.id, '| Plan:', user.plan);
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`🚫 Image upload blocked: User [${user.id}] plan=${user.plan}`);
             return res.status(403).json({
                 message:    'Image analysis is available on Pro and Ultra plans only.',
                 code:       'IMAGE_ANALYSIS_NOT_AVAILABLE',
@@ -32,13 +29,12 @@ const sendMessage = async (req, res) => {
             });
         }
 
-        // ── No message limit on any plan — proceed directly ───────────────
-
+        // ── Save user message (no resource_links for user messages) ────────
         const userMessage = await Message.create(chat_id, 'user', content || '[Image uploaded]');
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('💬  USER MESSAGE SAVED');
-        console.log('  ID:', userMessage.id, '| Chat:', chat_id, '| Plan:', user.plan, '| Image:', image_base64 ? 'yes' : 'no');
+        console.log(`  ID: ${userMessage.id} | Chat: ${chat_id} | Plan: ${user.plan} | Image: ${image_base64 ? 'yes' : 'no'}`);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         const allMessages = await Message.findByChatId(chat_id);
@@ -48,13 +44,15 @@ const sendMessage = async (req, res) => {
             vehicle_brand:    chat.vehicle_brand,
             vehicle_model:    chat.vehicle_model,
             vehicle_year:     chat.vehicle_year,
-            messages:         allMessages.map(m => ({ role: m.role, content: m.content })),
+            // Only send role + content to AI — don't send resource_links
+            messages: allMessages.map(m => ({ role: m.role, content: m.content })),
             image_base64:     image_base64     || null,
             image_media_type: image_media_type || 'image/jpeg',
         });
 
-        const { reply, vehicle_brand, vehicle_model, vehicle_year } = aiResponse.data;
+        const { reply, vehicle_brand, vehicle_model, vehicle_year, resource_links } = aiResponse.data;
 
+        // ── Update vehicle info if changed ─────────────────────────────────
         const needsUpdate =
             (vehicle_brand && vehicle_brand !== chat.vehicle_brand) ||
             (vehicle_model && vehicle_model !== chat.vehicle_model) ||
@@ -69,10 +67,21 @@ const sendMessage = async (req, res) => {
             console.log(`🚘 Vehicle updated: ${vehicle_brand} ${vehicle_model} ${vehicle_year}`);
         }
 
-        const botMessage = await Message.create(chat_id, 'bot', reply);
-        console.log(`🤖 Bot replied: Message [${botMessage.id}]`);
+        // ── Save bot reply WITH resource_links persisted to DB ─────────────
+        const safeLinks = Array.isArray(resource_links) ? resource_links : [];
+        const botMessage = await Message.create(chat_id, 'bot', reply, safeLinks);
 
-        res.status(201).json({ message: 'Message sent successfully', userMessage, botMessage });
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🤖  BOT REPLY SAVED');
+        console.log(`  Message ID : ${botMessage.id}`);
+        console.log(`  Links      : ${safeLinks.length} resource link(s) saved to DB`);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        res.status(201).json({
+            message: 'Message sent successfully',
+            userMessage,
+            botMessage,   // already has resource_links parsed as array from Message.create()
+        });
 
     } catch (error) {
         console.error('❌ Send message error:', error.message);
