@@ -11,8 +11,10 @@ app = FastAPI(title="Vehicle Diagnostic AI Service")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:3000",
         "http://localhost:5000",
         "https://autodiag-backend.onrender.com",
+        "https://vehicle-diagnostic-app.vercel.app/",
     ],
     allow_credentials=True,
     allow_methods=["*"],
