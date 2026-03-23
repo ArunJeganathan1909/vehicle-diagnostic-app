@@ -9,7 +9,14 @@ const subscriptionRoutes = require('./routes/subscription');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        'http://localhost:3000',               // local dev
+        'https://autodiag.vercel.app',         // production frontend
+        'https://your-custom-domain.com',      // if you have one
+    ],
+    credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
