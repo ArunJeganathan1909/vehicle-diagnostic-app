@@ -56,7 +56,23 @@ const sendMessage = async (req, res) => {
             image_media_type: image_media_type || 'image/jpeg',
         });
 
-        const { reply, vehicle_brand, vehicle_model, vehicle_year, resource_links } = aiResponse.data;
+        const { reply, vehicle_brand, vehicle_model, vehicle_year } = aiResponse.data;
+
+        // ── Safely extract resource_links as a clean array ─────────────────
+        // aiResponse.data.resource_links is already a JS array from axios JSON parsing
+        // We must NOT destructure it directly — JSON round-trip to ensure clean objects
+        let resource_links = [];
+        try {
+            const raw = aiResponse.data.resource_links;
+            if (Array.isArray(raw) && raw.length > 0) {
+                resource_links = JSON.parse(JSON.stringify(raw));
+            }
+        } catch (e) {
+            console.warn('⚠️  Failed to clean resource_links:', e.message);
+            resource_links = [];
+        }
+
+        console.log(`🔗 resource_links from AI: ${JSON.stringify(resource_links)}`);
 
         // ── Update vehicle info if changed ─────────────────────────────────
         const needsUpdate =
@@ -73,14 +89,13 @@ const sendMessage = async (req, res) => {
             console.log(`🚘 Vehicle updated: ${vehicle_brand} ${vehicle_model} ${vehicle_year}`);
         }
 
-        // ── Save bot reply with resource_links ─────────────────────────────
-        const safeLinks  = Array.isArray(resource_links) ? resource_links : [];
-        const botMessage = await Message.create(chat_id, 'bot', reply, safeLinks);
+        // ── Save bot reply with clean resource_links ───────────────────────
+        const botMessage = await Message.create(chat_id, 'bot', reply, resource_links);
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('🤖  BOT REPLY SAVED');
         console.log(`  Message ID : ${botMessage.id}`);
-        console.log(`  Links      : ${safeLinks.length} resource link(s) saved to DB`);
+        console.log(`  Links      : ${resource_links.length} resource link(s) saved to DB`);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         res.status(201).json({
