@@ -20,9 +20,12 @@ export default function RootLayout({ children }) {
         </AuthProvider>
 
         {/* Google AdSense — loads once globally, non-blocking */}
-        <script async
-                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5030474082686075"
-                crossOrigin="anonymous"></script>
+        <Script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5030474082686075"
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+        />
         </body>
         </html>
     );
