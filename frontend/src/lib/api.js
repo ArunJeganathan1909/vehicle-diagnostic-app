@@ -18,22 +18,22 @@ api.interceptors.request.use(async (config) => {
 // Auth
 export const syncUser = () => api.post('/api/auth/sync');
 
-// Chats
-export const getChats   = ()     => api.get('/api/chats');
-export const createChat = ()     => api.post('/api/chats');
-export const getChat    = (id)   => api.get(`/api/chats/${id}`);
-export const deleteChat = (id)   => api.delete(`/api/chats/${id}`);
-export const resolveChat= (id)   => api.patch(`/api/chats/${id}/resolve`);
+// Chats — all routes now use uuid (not numeric id)
+export const getChats    = ()       => api.get('/api/chats');
+export const createChat  = ()       => api.post('/api/chats');
+export const getChat     = (uuid)   => api.get(`/api/chats/${uuid}`);
+export const deleteChat  = (uuid)   => api.delete(`/api/chats/${uuid}`);
+export const resolveChat = (uuid)   => api.patch(`/api/chats/${uuid}/resolve`);
 
-// Messages — now supports optional image (base64 string)
-export const sendMessage = (chatId, content, imageBase64 = null, imageMediaType = 'image/jpeg') =>
+// Messages — chat_id sent in body / param is now the uuid
+export const sendMessage = (chatUuid, content, imageBase64 = null, imageMediaType = 'image/jpeg') =>
     api.post('/api/messages', {
-        chat_id:          chatId,
+        chat_id:          chatUuid,
         content:          content,
         image_base64:     imageBase64  || undefined,
         image_media_type: imageBase64 ? imageMediaType : undefined,
     });
 
-export const getMessages = (chatId) => api.get(`/api/messages/${chatId}`);
+export const getMessages = (chatUuid) => api.get(`/api/messages/${chatUuid}`);
 
 export default api;

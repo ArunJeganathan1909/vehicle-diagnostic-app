@@ -69,7 +69,8 @@ export default function Sidebar({ activeChatId, onChatsLoaded, mobileOpen, onMob
             const res = await createChat();
             const c   = res.data.chat;
             setChats(prev => [c, ...prev]);
-            router.push(`/chat/${c.id}`);
+            // ✅ Use uuid for navigation
+            router.push(`/chat/${c.uuid}`);
         } catch (err) {
             const code = err.response?.data?.code;
             if (code === 'CHAT_LIMIT_REACHED') {
@@ -82,14 +83,16 @@ export default function Sidebar({ activeChatId, onChatsLoaded, mobileOpen, onMob
         }
     };
 
-    const handleDelete = async (e, chatId) => {
+    const handleDelete = async (e, chatUuid) => {
         e.stopPropagation();
         if (!confirm('Delete this chat?')) return;
         try {
-            await deleteChat(chatId);
-            setChats(prev => prev.filter(c => c.id !== chatId));
+            // ✅ Use uuid for delete API call
+            await deleteChat(chatUuid);
+            setChats(prev => prev.filter(c => c.uuid !== chatUuid));
             toast.success('Chat deleted');
-            if (String(activeChatId) === String(chatId)) router.push('/dashboard');
+            // ✅ Compare by uuid
+            if (activeChatId === chatUuid) router.push('/dashboard');
         } catch { toast.error('Failed to delete'); }
     };
 
@@ -108,7 +111,6 @@ export default function Sidebar({ activeChatId, onChatsLoaded, mobileOpen, onMob
     const g = groupChats(chats);
     const W = collapsed ? 64 : 260;
 
-    // On mobile, the sidebar ignores the collapsed state — CSS controls it via data-open
     return (
         <>
             {/* ── Dark backdrop (mobile only) ── */}
@@ -174,12 +176,13 @@ export default function Sidebar({ activeChatId, onChatsLoaded, mobileOpen, onMob
                                         {!collapsed && <p className={s.groupLabel}>{label}</p>}
                                         {items.map(chat => (
                                             <ChatItem
-                                                key={chat.id}
+                                                key={chat.uuid}
                                                 chat={chat}
-                                                isActive={String(activeChatId) === String(chat.id)}
+                                                // ✅ Compare active state by uuid
+                                                isActive={activeChatId === chat.uuid}
                                                 collapsed={collapsed}
                                                 onDelete={handleDelete}
-                                                onClick={() => router.push(`/chat/${chat.id}`)}
+                                                onClick={() => router.push(`/chat/${chat.uuid}`)}
                                             />
                                         ))}
                                     </div>
@@ -262,7 +265,8 @@ function ChatItem({ chat, isActive, collapsed, onDelete, onClick }) {
                             </div>
                         </div>
                     </div>
-                    <button className={s.deleteBtn} onClick={e => onDelete(e, chat.id)}>✕</button>
+                    {/* ✅ Pass uuid to onDelete */}
+                    <button className={s.deleteBtn} onClick={e => onDelete(e, chat.uuid)}>✕</button>
                 </>
             )}
         </div>

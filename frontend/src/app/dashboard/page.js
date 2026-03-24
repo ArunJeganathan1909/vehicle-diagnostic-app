@@ -22,7 +22,8 @@ function Dashboard() {
         setCreating(true);
         try {
             const res = await createChat();
-            router.push(`/chat/${res.data.chat.id}`);
+            // ✅ Use uuid for navigation
+            router.push(`/chat/${res.data.chat.uuid}`);
         } catch (err) {
             const code = err.response?.data?.code;
             if (code === 'CHAT_LIMIT_REACHED') {
@@ -46,7 +47,6 @@ function Dashboard() {
     };
 
     return (
-        /* app-shell = full-viewport flex row */
         <div className={s.shell}>
             <Sidebar onChatsLoaded={setChats} />
 
@@ -68,9 +68,9 @@ function Dashboard() {
                         <>
                             <div className={s.statsGrid}>
                                 {[
-                                    { label: 'Total',    value: chats.length,                                    icon: '💬' },
-                                    { label: 'Active',   value: chats.filter(c => c.status !== 'resolved').length, icon: '🔴' },
-                                    { label: 'Resolved', value: chats.filter(c => c.status === 'resolved').length, icon: '✅' },
+                                    { label: 'Total',    value: chats.length,                                       icon: '💬' },
+                                    { label: 'Active',   value: chats.filter(c => c.status !== 'resolved').length,  icon: '🔴' },
+                                    { label: 'Resolved', value: chats.filter(c => c.status === 'resolved').length,  icon: '✅' },
                                 ].map(stat => (
                                     <div key={stat.label} className={s.statCard}>
                                         <span className={s.statIcon}>{stat.icon}</span>
@@ -84,8 +84,13 @@ function Dashboard() {
 
                             <div className={s.chatGrid}>
                                 {chats.map(chat => (
-                                    <ChatCard key={chat.id} chat={chat} formatDate={formatDate}
-                                              onClick={() => router.push(`/chat/${chat.id}`)} />
+                                    <ChatCard
+                                        key={chat.uuid}
+                                        chat={chat}
+                                        formatDate={formatDate}
+                                        // ✅ Use uuid for navigation
+                                        onClick={() => router.push(`/chat/${chat.uuid}`)}
+                                    />
                                 ))}
                             </div>
                         </>
@@ -93,7 +98,6 @@ function Dashboard() {
                 </div>
             </main>
 
-            {/* Ad panel — only renders for free/pro users */}
             <AdBanner slot="vertical" />
         </div>
     );
