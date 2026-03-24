@@ -1,11 +1,14 @@
-const db = require('../config/db');
+const db   = require('../config/db');
+const { v4: uuidv4 } = require('uuid');
 
 class Chat {
-    // Create a new chat session
+    // Create a new chat session — generates a UUID for the public-facing ID
     static async create(user_id) {
+        const uuid = uuidv4();
+
         const [result] = await db.query(
-            'INSERT INTO chats (user_id, title) VALUES (?, ?)',
-            [user_id, 'New Vehicle Chat']
+            'INSERT INTO chats (user_id, title, uuid) VALUES (?, ?, ?)',
+            [user_id, 'New Vehicle Chat', uuid]
         );
 
         const [newChat] = await db.query(
@@ -25,11 +28,30 @@ class Chat {
         return rows;
     }
 
-    // Get single chat by id
+    // Get single chat by internal id (used internally only — never expose to frontend)
     static async findById(chat_id) {
         const [rows] = await db.query(
             'SELECT * FROM chats WHERE id = ?',
             [chat_id]
+        );
+        return rows[0] || null;
+    }
+
+    // Get chat by UUID (used by all public/API routes)
+    static async findByUuid(uuid) {
+        const [rows] = await db.query(
+            'SELECT * FROM chats WHERE uuid = ?',
+            [uuid]
+        );
+        return rows[0] || null;
+    }
+
+    // Get chat by UUID AND verify ownership in one query.
+    // Returns null if the chat doesn't exist OR doesn't belong to this user.
+    static async findByUuidAndUserId(uuid, user_id) {
+        const [rows] = await db.query(
+            'SELECT * FROM chats WHERE uuid = ? AND user_id = ?',
+            [uuid, user_id]
         );
         return rows[0] || null;
     }

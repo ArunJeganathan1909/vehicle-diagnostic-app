@@ -4,10 +4,10 @@ const { getChats, createChat, getChatById, deleteChat, resolveChat } = require('
 
 router.use(verifyToken);
 
-router.get('/', getChats);
-router.post('/', createChat);
-router.get('/:id', getChatById);
-router.delete('/:id', deleteChat);
-router.patch('/:id/resolve', resolveChat);
+router.get('/',            getChats);
+router.post('/',           createChat);
+router.get('/:uuid',       getChatById);
+router.delete('/:uuid',    deleteChat);
+router.patch('/:uuid/resolve', resolveChat);
 
 module.exports = router;

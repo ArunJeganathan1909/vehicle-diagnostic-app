@@ -28,7 +28,7 @@ const createChat = async (req, res) => {
         // ── Plan limit check ──────────────────────────────────────────────
         const limitReached = await User.hasReachedChatLimit(user.id);
         if (limitReached) {
-            const limits  = User.getPlanLimits(user.plan);
+            const limits     = User.getPlanLimits(user.plan);
             const isFreePlan = user.plan === 'free';
 
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -63,6 +63,7 @@ const createChat = async (req, res) => {
         console.log('🚗  NEW CHAT CREATED');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('  Chat ID    :', chat.id);
+        console.log('  Chat UUID  :', chat.uuid);
         console.log('  User ID    :', user.id);
         console.log('  User Plan  :', user.plan);
         console.log('  Created At :', chat.created_at);
@@ -75,15 +76,22 @@ const createChat = async (req, res) => {
     }
 };
 
-// GET /api/chats/:id
+// GET /api/chats/:uuid
 const getChatById = async (req, res) => {
     try {
-        const chat = await Chat.findById(req.params.id);
-        if (!chat) return res.status(404).json({ message: 'Chat not found' });
+        const user = await User.findByFirebaseUid(req.user.uid);
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const messages = await Message.findByChatId(req.params.id);
+        // ── Ownership check: UUID must belong to the requesting user ───────
+        const chat = await Chat.findByUuidAndUserId(req.params.uuid, user.id);
+        if (!chat) {
+            // Return 404 (not 403) to avoid leaking that the chat exists
+            return res.status(404).json({ message: 'Chat not found' });
+        }
 
-        console.log(`🔍 Chat fetched: [${chat.id}] "${chat.title}" — ${messages.length} message(s)`);
+        const messages = await Message.findByChatId(chat.id);
+
+        console.log(`🔍 Chat fetched: [${chat.uuid}] "${chat.title}" — ${messages.length} message(s)`);
 
         res.json({ chat, messages });
     } catch (error) {
@@ -92,16 +100,20 @@ const getChatById = async (req, res) => {
     }
 };
 
-// DELETE /api/chats/:id
+// DELETE /api/chats/:uuid
 const deleteChat = async (req, res) => {
     try {
-        const chat = await Chat.findById(req.params.id);
+        const user = await User.findByFirebaseUid(req.user.uid);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // ── Ownership check ────────────────────────────────────────────────
+        const chat = await Chat.findByUuidAndUserId(req.params.uuid, user.id);
         if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
-        await Message.deleteByChatId(req.params.id);
-        await Chat.delete(req.params.id);
+        await Message.deleteByChatId(chat.id);
+        await Chat.delete(chat.id);
 
-        console.log(`🗑️  Chat deleted: [${chat.id}] ${chat.vehicle_brand || 'No vehicle'}`);
+        console.log(`🗑️  Chat deleted: [${chat.uuid}] ${chat.vehicle_brand || 'No vehicle'}`);
 
         res.json({ message: 'Chat deleted successfully' });
     } catch (error) {
@@ -110,14 +122,21 @@ const deleteChat = async (req, res) => {
     }
 };
 
-// PATCH /api/chats/:id/resolve
+// PATCH /api/chats/:uuid/resolve
 const resolveChat = async (req, res) => {
     try {
-        const chat = await Chat.resolve(req.params.id);
+        const user = await User.findByFirebaseUid(req.user.uid);
+        if (!user) return res.status(404).json({ message: 'User not found' });
 
-        console.log(`✅ Chat resolved: [${chat.id}] ${chat.vehicle_brand || 'No vehicle'}`);
+        // ── Ownership check ────────────────────────────────────────────────
+        const chat = await Chat.findByUuidAndUserId(req.params.uuid, user.id);
+        if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
-        res.json({ message: 'Chat resolved successfully', chat });
+        const updatedChat = await Chat.resolve(chat.id);
+
+        console.log(`✅ Chat resolved: [${chat.uuid}] ${chat.vehicle_brand || 'No vehicle'}`);
+
+        res.json({ message: 'Chat resolved successfully', chat: updatedChat });
     } catch (error) {
         console.error('❌ Resolve chat error:', error);
         res.status(500).json({ message: 'Server error' });

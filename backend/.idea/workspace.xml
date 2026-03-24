@@ -6,11 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="4ea94320-7973-42bd-88ad-10138ceb9b8b" name="Changes" comment="updated message model">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/globals.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Chat.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Chat.module.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Dashboard.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Dashboard.module.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Pricing.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Pricing.module.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/styles/Sidebar.module.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/styles/Sidebar.module.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,7 +98,8 @@
       <workItem from="1773296505681" duration="1336000" />
       <workItem from="1773389568927" duration="676000" />
       <workItem from="1773927724284" duration="4579000" />
-      <workItem from="1774240462802" duration="18299000" />
+      <workItem from="1774240462802" duration="20366000" />
+      <workItem from="1774363923075" duration="660000" />
     </task>
     <task id="LOCAL-00001" summary="modified login page">
       <option name="closed" value="true" />

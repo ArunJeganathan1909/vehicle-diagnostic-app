@@ -7,12 +7,17 @@ const axios   = require('axios');
 const sendMessage = async (req, res) => {
     try {
         const { chat_id, content, image_base64, image_media_type } = req.body;
+        // NOTE: chat_id sent from the frontend is now a UUID string
 
         if (!chat_id || (!content && !image_base64)) {
             return res.status(400).json({ message: 'chat_id and content or image are required' });
         }
 
-        const chat = await Chat.findById(chat_id);
+        // ── Look up by UUID and verify ownership ───────────────────────────
+        const requestingUser = await User.findByFirebaseUid(req.user.uid);
+        if (!requestingUser) return res.status(404).json({ message: 'User not found' });
+
+        const chat = await Chat.findByUuidAndUserId(chat_id, requestingUser.id);
         if (!chat) return res.status(404).json({ message: 'Chat not found' });
 
         const user = await User.findById(chat.user_id);
@@ -30,24 +35,24 @@ const sendMessage = async (req, res) => {
         }
 
         // ── Save user message ──────────────────────────────────────────────
-        const userMessage = await Message.create(chat_id, 'user', content || '[Image uploaded]');
+        const userMessage = await Message.create(chat.id, 'user', content || '[Image uploaded]');
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('💬  USER MESSAGE SAVED');
-        console.log(`  ID: ${userMessage.id} | Chat: ${chat_id} | Plan: ${user.plan} | Image: ${image_base64 ? 'yes' : 'no'}`);
+        console.log(`  ID: ${userMessage.id} | Chat: ${chat.uuid} | Plan: ${user.plan} | Image: ${image_base64 ? 'yes' : 'no'}`);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        const allMessages = await Message.findByChatId(chat_id);
+        const allMessages = await Message.findByChatId(chat.id);
 
-        // ── Call AI service — await was missing here ───────────────────────
+        // ── Call AI service ────────────────────────────────────────────────
         const aiServiceUrl = process.env.AI_SERVICE_URL;
         if (!aiServiceUrl) {
             console.error('❌ AI_SERVICE_URL env var is not set!');
             return res.status(500).json({ message: 'AI service not configured' });
         }
 
-        const aiResponse = await axios.post(`${aiServiceUrl}/chat`, {  // ← await added
-            chat_id,
+        const aiResponse = await axios.post(`${aiServiceUrl}/chat`, {
+            chat_id:          chat.id,   // internal int ID for AI service
             vehicle_brand:    chat.vehicle_brand,
             vehicle_model:    chat.vehicle_model,
             vehicle_year:     chat.vehicle_year,
@@ -59,8 +64,6 @@ const sendMessage = async (req, res) => {
         const { reply, vehicle_brand, vehicle_model, vehicle_year } = aiResponse.data;
 
         // ── Safely extract resource_links as a clean array ─────────────────
-        // aiResponse.data.resource_links is already a JS array from axios JSON parsing
-        // We must NOT destructure it directly — JSON round-trip to ensure clean objects
         let resource_links = [];
         try {
             const raw = aiResponse.data.resource_links;
@@ -81,7 +84,7 @@ const sendMessage = async (req, res) => {
             (vehicle_year  && vehicle_year  !== chat.vehicle_year);
 
         if (needsUpdate) {
-            await Chat.updateVehicleInfo(chat_id, {
+            await Chat.updateVehicleInfo(chat.id, {
                 vehicle_brand: vehicle_brand || chat.vehicle_brand,
                 vehicle_model: vehicle_model || chat.vehicle_model,
                 vehicle_year:  vehicle_year  || chat.vehicle_year,
@@ -90,7 +93,7 @@ const sendMessage = async (req, res) => {
         }
 
         // ── Save bot reply with clean resource_links ───────────────────────
-        const botMessage = await Message.create(chat_id, 'bot', reply, resource_links);
+        const botMessage = await Message.create(chat.id, 'bot', reply, resource_links);
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('🤖  BOT REPLY SAVED');
@@ -110,11 +113,18 @@ const sendMessage = async (req, res) => {
     }
 };
 
-// GET /api/messages/:chat_id
+// GET /api/messages/:chat_uuid
 const getMessages = async (req, res) => {
     try {
-        const messages = await Message.findByChatId(req.params.chat_id);
-        console.log(`📨 Messages fetched: Chat [${req.params.chat_id}] — ${messages.length} message(s)`);
+        const requestingUser = await User.findByFirebaseUid(req.user.uid);
+        if (!requestingUser) return res.status(404).json({ message: 'User not found' });
+
+        // ── Ownership check ────────────────────────────────────────────────
+        const chat = await Chat.findByUuidAndUserId(req.params.chat_uuid, requestingUser.id);
+        if (!chat) return res.status(404).json({ message: 'Chat not found' });
+
+        const messages = await Message.findByChatId(chat.id);
+        console.log(`📨 Messages fetched: Chat [${chat.uuid}] — ${messages.length} message(s)`);
         res.json({ messages });
     } catch (error) {
         console.error('❌ Get messages error:', error);

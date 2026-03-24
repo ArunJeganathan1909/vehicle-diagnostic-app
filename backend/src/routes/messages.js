@@ -4,7 +4,7 @@ const { sendMessage, getMessages } = require('../controllers/messageController')
 
 router.use(verifyToken);
 
-router.post('/', sendMessage);
-router.get('/:chat_id', getMessages);
+router.post('/',             sendMessage);
+router.get('/:chat_uuid',    getMessages);
 
 module.exports = router;
