@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
         {/* Google AdSense — loads once globally, non-blocking */}
         <Script
             async
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5030474082686075"
             crossOrigin="anonymous"
             strategy="lazyOnload"
         />
