@@ -313,11 +313,15 @@ def process_message(
     # ── Parse response ────────────────────────────────────────────────────────
     result = parse_groq_json(raw_response)
 
-    # Total parse failure — return raw as reply, no links
+    # Total parse failure — Groq returned plain text, use it directly as reply
     if result is None:
-        print("❌ Complete parse failure — returning raw response")
+        print("❌ Complete parse failure — using raw response as reply text")
+        reply_text = raw_response.strip()
+        # Strip any leftover markdown fences just in case
+        if reply_text.startswith("```"):
+            reply_text = re.sub(r"^```[a-z]*\n?", "", reply_text).rstrip("```").strip()
         return {
-            "reply":          raw_response,
+            "reply":          reply_text or "I couldn't process that. Could you please try again?",
             "vehicle_brand":  chat_state["vehicle_brand"],
             "vehicle_model":  chat_state["vehicle_model"],
             "vehicle_year":   str(chat_state["vehicle_year"]) if chat_state["vehicle_year"] else None,
@@ -349,8 +353,14 @@ def process_message(
         except Exception:
             pass
 
-    if not reply_text or not isinstance(reply_text, str):
-        reply_text = "I couldn't process that. Could you please try again?"
+    if not reply_text or not isinstance(reply_text, str) or not reply_text.strip():
+        # Last resort: maybe Groq put the answer directly in the raw response
+        # outside the JSON (happens occasionally with the vision model)
+        stripped = raw_response.strip()
+        if stripped and not stripped.startswith("{"):
+            reply_text = stripped
+        else:
+            reply_text = "I couldn't process that. Could you please try again?"
 
     # ── Build resource links ──────────────────────────────────────────────────
     parts_needed     = result.get("parts_needed", [])

@@ -83,11 +83,13 @@ def get_gemini_response(
             model = MODEL_VISION
 
         else:
-            # Text only — the system message already carries the prompt.
-            # We DON'T append another user message here because the system
-            # prompt already contains the user's latest message embedded in it.
-            # The history above has all prior turns; Groq will respond to the
-            # system instruction directly.
+            # Text only — always append a final user turn so Groq has
+            # something to respond to. Without this, some models return an
+            # empty completion when there is no trailing user message.
+            messages.append({
+                "role":    "user",
+                "content": "Please respond now based on the system instructions above.",
+            })
             model = MODEL_TEXT
 
         print(f"📤 Sending {len(messages)} message(s) to Groq ({model})...")
