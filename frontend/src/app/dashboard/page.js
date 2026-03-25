@@ -14,15 +14,15 @@ export default function DashboardPage() {
 }
 
 function Dashboard() {
-    const router             = useRouter();
+    const router               = useRouter();
     const [chats,    setChats]    = useState([]);
     const [creating, setCreating] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false); // ✅ mobile sidebar state
 
     const handleNewChat = async () => {
         setCreating(true);
         try {
             const res = await createChat();
-            // ✅ Use uuid for navigation
             router.push(`/chat/${res.data.chat.uuid}`);
         } catch (err) {
             const code = err.response?.data?.code;
@@ -48,10 +48,32 @@ function Dashboard() {
 
     return (
         <div className={s.shell}>
-            <Sidebar onChatsLoaded={setChats} />
+            {/* ✅ Backdrop for mobile drawer — clicking it closes the sidebar */}
+            <div
+                className={s.backdrop}
+                data-visible={mobileOpen ? 'true' : 'false'}
+                onClick={() => setMobileOpen(false)}
+            />
+
+            <Sidebar
+                onChatsLoaded={setChats}
+                mobileOpen={mobileOpen}
+                onMobileClose={() => setMobileOpen(false)}
+            />
 
             <main className={s.main}>
                 <header className={s.header}>
+                    {/* ✅ Hamburger — only visible on mobile (≤640px via CSS) */}
+                    <button
+                        className={s.menuBtn}
+                        onClick={() => setMobileOpen(true)}
+                        aria-label="Open menu"
+                    >
+                        <span className={s.menuBtnLine} />
+                        <span className={s.menuBtnLine} />
+                        <span className={s.menuBtnLine} />
+                    </button>
+
                     <div>
                         <h1 className={s.headerTitle}>My Diagnostics</h1>
                         <p className={s.headerSub}>{chats.length} chat{chats.length !== 1 ? 's' : ''}</p>
@@ -88,7 +110,6 @@ function Dashboard() {
                                         key={chat.uuid}
                                         chat={chat}
                                         formatDate={formatDate}
-                                        // ✅ Use uuid for navigation
                                         onClick={() => router.push(`/chat/${chat.uuid}`)}
                                     />
                                 ))}

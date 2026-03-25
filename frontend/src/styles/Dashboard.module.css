@@ -312,26 +312,89 @@
     }
 }
 
+/* ── Hamburger menu button (hidden on desktop, shown on mobile via media query) ── */
+.menuBtn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    flex-direction: column;
+    padding: 9px 8px;
+    gap: 0;
+    transition: all 0.18s;
+}
+
+.menuBtn:hover {
+    background: rgba(108, 99, 255, 0.1);
+    border-color: rgba(108, 99, 255, 0.25);
+}
+
+.menuBtnLine {
+    width: 16px;
+    height: 1.5px;
+    background: #9a9ab8;
+    border-radius: 2px;
+    display: block;
+}
+
+.menuBtnLine + .menuBtnLine {
+    margin-top: 4px;
+}
+
+/* ── Backdrop overlay (used on mobile when sidebar drawer is open) ── */
+.backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 99;
+    animation: fadeInBackdrop 0.25s ease forwards;
+}
+
+.backdrop[data-visible="true"] {
+    display: block;
+}
+
+@keyframes fadeInBackdrop {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
 /* ── ≤ 640px: single column mobile ── */
 @media (max-width: 640px) {
     .shell {
-        flex-direction: column;
-        height: auto;
-        min-height: 100vh;
-        overflow: visible;
+        flex-direction: row;      /* sidebar is off-canvas overlay, keep row */
+        height: 100vh;
+        overflow: hidden;
     }
 
     .main {
-        height: auto;
-        overflow: visible;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
 
     .header {
         height: 52px;
         padding: 0 12px;
-        position: sticky;
-        top: 0;
+        position: relative;
         z-index: 10;
+        gap: 8px;
+    }
+
+    /* Show the hamburger on mobile */
+    .menuBtn {
+        display: flex;
     }
 
     .headerTitle {
@@ -349,10 +412,11 @@
     }
 
     .content {
-        padding: 12px 12px 40px;
-        overflow: visible;
+        flex: 1 1 0;
         min-height: 0;
-        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 12px 12px 40px;
     }
 
     /* Stats row: 3 equal cols */
