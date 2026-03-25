@@ -358,8 +358,6 @@ function Chat({ id, onOpenMenu }) {
                                 {sending ? <span className={s.sendSpinner} /> : '↑'}
                             </button>
                         </div>
-
-                        <p className={s.footer}>Powered by Groq AI · For informational purposes only</p>
                     </div>
                 </div>
             </div>
