@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chats');
 const messageRoutes = require('./routes/messages');
 const subscriptionRoutes = require('./routes/subscription');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -26,8 +27,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/subscription', subscriptionRoutes);
-
-
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/', (req, res) => {
