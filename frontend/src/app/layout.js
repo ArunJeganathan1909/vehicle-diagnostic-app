@@ -19,6 +19,30 @@ export default function RootLayout({ children }) {
             {children}
         </AuthProvider>
 
+        {/* Google Analytics GA4 */}
+        <Script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-W27N304CF0"
+            strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+            {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-W27N304CF0');
+            `}
+        </Script>
+
+        {/*<script async src="https://www.googletagmanager.com/gtag/js?id=G-W27N304CF0"></script>*/}
+        {/*<script>*/}
+        {/*    window.dataLayer = window.dataLayer || [];*/}
+        {/*    function gtag(){dataLayer.push(arguments);}*/}
+        {/*    gtag('js', new Date());*/}
+
+        {/*    gtag('config', 'G-W27N304CF0');*/}
+        {/*</script>*/}
+
         {/* Google AdSense — loads once globally, non-blocking */}
         <Script
             async
