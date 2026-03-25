@@ -263,6 +263,48 @@ Respond ONLY with valid JSON (no markdown fences):
 {{"reply": "your full diagnosis as plain text", "vehicle_brand": "{has_brand}", "vehicle_model": "{has_model}", "vehicle_year": "{has_year}", "parts_needed": ["part1", "part2"], "youtube_searches": ["search query 1", "search query 2"]}}"""
 
 
+
+# ── Pre-AI intent detection ───────────────────────────────────────────────────
+
+KNOWN_BRANDS = [
+    "toyota", "honda", "bmw", "ford", "nissan", "hyundai", "kia", "mazda",
+    "volkswagen", "vw", "audi", "mercedes", "benz", "chevrolet", "chevy",
+    "suzuki", "mitsubishi", "subaru", "lexus", "jeep", "tesla", "volvo",
+    "peugeot", "renault", "fiat", "skoda", "seat", "opel", "vauxhall",
+    "dodge", "chrysler", "ram", "gmc", "buick", "cadillac", "infiniti",
+    "acura", "genesis", "isuzu", "daihatsu", "proton", "perodua", "tata",
+    "mahindra", "maruti",
+]
+
+NEW_ISSUE_PHRASES = [
+    "another issue", "new issue", "another problem", "new problem",
+    "different issue", "different problem", "one more issue", "one more problem",
+    "also have", "also facing", "have another", "got another",
+    "second issue", "second problem", "additional issue", "additional problem",
+    "something else", "other issue", "other problem",
+]
+
+
+def is_new_issue_request(user_message: str) -> bool:
+    lower = user_message.lower().strip()
+    if len(lower) > 120:
+        return False
+    return any(phrase in lower for phrase in NEW_ISSUE_PHRASES)
+
+
+def mentions_different_vehicle(user_message: str, current_brand: str, current_model: str) -> bool:
+    if not current_brand:
+        return False
+    lower = user_message.lower()
+    current_brand_lower = current_brand.lower()
+    for brand in KNOWN_BRANDS:
+        if brand in lower and brand != current_brand_lower:
+            if current_model and brand in current_model.lower():
+                continue
+            return True
+    return False
+
+
 # ── Main process function ─────────────────────────────────────────────────────
 
 def process_message(
@@ -300,7 +342,57 @@ def process_message(
     print(f"   Message : {user_message[:80]}")
     print(f"   Image   : {'yes' if image_base64 else 'no'}")
 
+
+    # ── Guard 1: "I have another issue" with no description ──────────────────
+    if not image_base64 and chat_state.get("vehicle_brand") and chat_state.get("vehicle_year"):
+        if is_new_issue_request(user_message):
+            vehicle_label = (
+                f"{chat_state['vehicle_year']} {chat_state['vehicle_brand']}"
+                + (f" {chat_state['vehicle_model']}" if chat_state.get("vehicle_model") else "")
+            )
+            print("⚡ New-issue shortcut triggered — skipping AI call")
+            return {
+                "reply":          f"Sure! Please describe the new problem you're experiencing with your {vehicle_label} and I'll diagnose it for you.",
+                "vehicle_brand":  chat_state["vehicle_brand"],
+                "vehicle_model":  chat_state["vehicle_model"],
+                "vehicle_year":   chat_state["vehicle_year"],
+                "resource_links": [],
+            }
+
+    # ── Guard 2: User mentions a different vehicle brand ─────────────────────
+    if not image_base64 and chat_state.get("vehicle_brand") and chat_state.get("vehicle_year"):
+        if mentions_different_vehicle(user_message, chat_state["vehicle_brand"], chat_state.get("vehicle_model")):
+            vehicle_label = (
+                f"{chat_state['vehicle_year']} {chat_state['vehicle_brand']}"
+                + (f" {chat_state['vehicle_model']}" if chat_state.get("vehicle_model") else "")
+            )
+            print("⚡ Different-vehicle shortcut triggered — skipping AI call")
+            return {
+                "reply":          (
+                    f"This chat is dedicated to your {vehicle_label}. "
+                    f"To get a diagnosis for a different vehicle, please start a new chat from the dashboard. "
+                    f"Each chat is locked to one vehicle so your history stays organised! 🚗"
+                ),
+                "vehicle_brand":  chat_state["vehicle_brand"],
+                "vehicle_model":  chat_state["vehicle_model"],
+                "vehicle_year":   chat_state["vehicle_year"],
+                "resource_links": [],
+            }
+
     # Build conversation history for Groq
+    # We exclude the current (last) user message since it's embedded in the system prompt.
+    # We also strip any trailing bot "please describe the issue" prompts from history —
+    # Groq echoes the last bot turn verbatim instead of diagnosing when these are present.
+    BOT_PROMPT_SNIPPETS = [
+        "please describe the issue",
+        "please describe the new problem",
+        "describe the problem you're experiencing",
+        "need to know the problem",
+        "what problem are you experiencing",
+        "what issue are you experiencing",
+        "describe the new issue",
+    ]
+
     groq_history = []
     for msg in messages[:-1]:
         role = "user" if msg["role"] == "user" else "model"
@@ -308,6 +400,14 @@ def process_message(
             "role":  role,
             "parts": [{"text": msg["content"]}]
         })
+
+    # Pop trailing bot "please describe" prompts so Groq doesn't echo them
+    while groq_history and groq_history[-1]["role"] == "model":
+        last_text = groq_history[-1]["parts"][0].get("text", "").lower()
+        if any(s in last_text for s in BOT_PROMPT_SNIPPETS):
+            groq_history.pop()
+        else:
+            break
 
     # Build prompt
     if image_base64:
