@@ -16,7 +16,6 @@ export default function ChatPage() {
 }
 
 function ChatLayout() {
-    // ✅ FIX 1: Read 'uuid' instead of 'id' (rename folder to /chat/[uuid]/ too)
     const { uuid } = useParams();
     const [mobileOpen, setMobileOpen] = useState(false);
     const closeMobile = useCallback(() => setMobileOpen(false), []);
@@ -24,12 +23,12 @@ function ChatLayout() {
     return (
         <div className={s.shell}>
             <Sidebar
-                activeChatId={uuid}  // ✅ FIX 2: pass uuid
+                activeChatId={uuid}
                 mobileOpen={mobileOpen}
                 onMobileClose={closeMobile}
             />
             <div className={s.chatShell}>
-                <Chat id={uuid} onOpenMenu={() => setMobileOpen(true)} />  {/* ✅ FIX 3: pass uuid as id prop */}
+                <Chat id={uuid} onOpenMenu={() => setMobileOpen(true)} />
             </div>
             <AdBanner slot="vertical" />
         </div>
@@ -66,6 +65,57 @@ function formatBotContent(content) {
     return formatted;
 }
 
+// ── Detect if a bot message is a short onboarding question ───────────────
+// (asking for brand / model / year / problem) — NOT a full diagnosis
+function isOnboardingQuestion(content) {
+    if (!content || content.startsWith('__typing__')) return false;
+    // Short messages are onboarding questions (under ~280 chars)
+    if (content.length > 280) return false;
+    const lower = content.toLowerCase();
+    const onboardingPhrases = [
+        'brand of your vehicle',
+        'what is the brand',
+        'what is the model',
+        'what year',
+        'manufacturing year',
+        'model of your',
+        'what problem',
+        'describe the issue',
+        'describe the problem',
+        'what issue',
+        'experiencing with',
+        'tell me the brand',
+        'could you tell me',
+        'please tell me',
+        'can you tell me',
+        'hello!',
+        "i'm your vehicle",
+        'vehicle diagnostic assistant',
+    ];
+    return onboardingPhrases.some(p => lower.includes(p));
+}
+
+// Map onboarding messages to a step config for visual treatment
+function getOnboardingStep(content) {
+    const lower = content.toLowerCase();
+    if (lower.includes("hello") || lower.includes("i'm your vehicle") || lower.includes('vehicle diagnostic assistant')) {
+        return { icon: '🚗', step: null, accent: '#6c63ff', label: 'Welcome' };
+    }
+    if (lower.includes('brand')) {
+        return { icon: '🏷️', step: 1, accent: '#6c63ff', label: 'Step 1 of 4' };
+    }
+    if (lower.includes('model')) {
+        return { icon: '🔍', step: 2, accent: '#06b6d4', label: 'Step 2 of 4' };
+    }
+    if (lower.includes('year') || lower.includes('manufacturing')) {
+        return { icon: '📅', step: 3, accent: '#8b5cf6', label: 'Step 3 of 4' };
+    }
+    if (lower.includes('problem') || lower.includes('issue') || lower.includes('experiencing') || lower.includes('describe')) {
+        return { icon: '🔧', step: 4, accent: '#f59e0b', label: 'Step 4 of 4' };
+    }
+    return { icon: '💬', step: null, accent: '#6c63ff', label: null };
+}
+
 /* ── Chat ── */
 function Chat({ id, onOpenMenu }) {
     const router = useRouter();
@@ -92,9 +142,9 @@ function Chat({ id, onOpenMenu }) {
     useEffect(() => { scrollToBottom(); }, [messages]);
 
     const loadChat = async () => {
-        if (!id) return; // ✅ FIX 4: guard against undefined id
+        if (!id) return;
         try {
-            const res = await getChat(id); // id is now a uuid string
+            const res = await getChat(id);
             setChat(res.data.chat);
             setMessages(res.data.messages);
         } catch {
@@ -151,8 +201,6 @@ function Chat({ id, onOpenMenu }) {
 
         try {
             const imageBase64 = capturedFile && capturedPreview ? capturedPreview.split(',')[1] : null;
-
-            // ✅ FIX 5: Pass id directly — it's already a uuid string, NO parseInt()
             const res = await sendMessage(id, content, imageBase64, capturedFile?.type);
             const { userMessage, botMessage } = res.data;
 
@@ -163,7 +211,7 @@ function Chat({ id, onOpenMenu }) {
                         botMessage,
                     ])
             );
-            const chatRes = await getChat(id); // ✅ uuid string
+            const chatRes = await getChat(id);
             setChat(chatRes.data.chat);
 
         } catch (err) {
@@ -186,133 +234,133 @@ function Chat({ id, onOpenMenu }) {
 
     const handleResolve = async () => {
         try {
-            const res = await resolveChat(id); // ✅ uuid string
+            const res = await resolveChat(id);
             setChat(res.data.chat);
             toast.success('Marked as resolved!');
         } catch { toast.error('Failed to resolve'); }
     };
 
     if (loading) return (
-        <div className={s.loadingScreen}><div className="loader" /></div>
+        <div className={s.loadingScreen}>
+            <div className={s.loadingSpinner} />
+        </div>
     );
 
-    const vehicleLabel = chat?.vehicle_brand
-        ? `${chat.vehicle_year || ''} ${chat.vehicle_brand} ${chat.vehicle_model || ''}`.trim()
-        : null;
-    const resolved = chat?.status === 'resolved';
-    const canSend  = (input.trim() || imageFile) && !sending && !resolved;
+    const resolved   = chat?.status === 'resolved';
+    const canSend    = (input.trim() || imageFile) && !sending && !resolved;
+    const titleLabel = chat?.vehicle_brand
+        ? `${chat.vehicle_year ? chat.vehicle_year + ' ' : ''}${chat.vehicle_brand}${chat.vehicle_model ? ' ' + chat.vehicle_model : ''}`
+        : 'New Diagnostic';
 
     return (
         <>
-            {/* ── Fixed Header ── */}
-            <header className={s.header}>
-                <div className={s.headerLeft}>
-                    <button
-                        className={s.menuBtn}
-                        onClick={onOpenMenu}
-                        aria-label="Open sidebar"
-                    >
-                        <span className={s.menuBtnLine} />
-                        <span className={s.menuBtnLine} />
-                        <span className={s.menuBtnLine} />
-                    </button>
+            <div className={s.chatInner}>
 
-                    <div className={s.headerTitleWrap}>
-                        <div className={s.headerTitle}>
-                            {vehicleLabel || chat?.title || 'New Diagnostic'}
+                {/* Header */}
+                <div className={s.header}>
+                    <div className={s.headerLeft}>
+                        <button className={s.menuBtn} onClick={onOpenMenu} aria-label="Open menu">
+                            <span className={s.menuBtnLine} />
+                            <span className={s.menuBtnLine} />
+                            <span className={s.menuBtnLine} />
+                        </button>
+                        <div className={s.headerTitleWrap}>
+                            <div className={s.headerTitle}>{titleLabel}</div>
+                            <div className={s.headerSub}>Vehicle Diagnostic Chat</div>
                         </div>
-                        {vehicleLabel && chat?.title && chat.title !== vehicleLabel && (
-                            <div className={s.headerSub}>{chat.title}</div>
+                    </div>
+                    <div className={s.headerRight}>
+                        <span className={`${s.statusBadge} ${resolved ? s.statusResolved : s.statusActive}`}>
+                            {resolved ? '✓ Resolved' : '● Active'}
+                        </span>
+                        {!resolved && (
+                            <button className={s.resolveBtn} onClick={handleResolve}>
+                                Mark Resolved
+                            </button>
                         )}
                     </div>
                 </div>
 
-                <div className={s.headerRight}>
-                    <span className={`${s.statusBadge} ${resolved ? s.statusResolved : s.statusActive}`}>
-                        {resolved ? '✓ Resolved' : '● Active'}
-                    </span>
-                    {!resolved && chat?.vehicle_brand && (
-                        <button className={s.resolveBtn} onClick={handleResolve}>
-                            Mark Resolved
-                        </button>
-                    )}
-                </div>
-            </header>
-
-            {/* ── Scrollable Messages ── */}
-            <div className={s.messages}>
-                <div className={s.messagesInner}>
-                    {messages.map((msg, i) => (
-                        <MessageBubble key={msg.id} msg={msg} prevMsg={messages[i - 1]} />
-                    ))}
-                    <div ref={messagesEndRef} />
-                </div>
-            </div>
-
-            {/* ── Fixed Input Bar ── */}
-            <div className={s.inputBar}>
-                <div className={s.inputInner}>
-                    {imagePreview && (
-                        <div className={s.imagePreviewStrip}>
-                            <img src={imagePreview} alt="preview" className={s.imagePreviewThumb} />
-                            <div className={s.imagePreviewInfo}>
-                                <div className={s.imagePreviewName}>{imageFile?.name}</div>
-                                <div className={s.imagePreviewSub}>Ready to send</div>
-                            </div>
-                            <button className={s.clearImageBtn} onClick={clearImage}>✕</button>
-                        </div>
-                    )}
-
-                    <div className={s.inputRow}>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageSelect}
-                            style={{ display: 'none' }}
-                        />
-                        <button
-                            className={`${s.cameraBtn} ${imagePreview ? s.cameraBtnActive : ''}`}
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={resolved}
-                            title="Upload dashboard image"
-                        >
-                            📷
-                        </button>
-
-                        <div className={`${s.textareaWrap} ${focused ? s.textareaWrapFocused : ''}`}>
-                            <textarea
-                                ref={el => { inputRef.current = el; textareaRef.current = el; }}
-                                className={s.textarea}
-                                value={input}
-                                onChange={e => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                onFocus={() => setFocused(true)}
-                                onBlur={() => setFocused(false)}
-                                disabled={sending || resolved}
-                                placeholder={
-                                    resolved  ? 'This chat is resolved' :
-                                        imageFile ? 'Add a description (optional)...' :
-                                            'Describe your issue or upload a warning light image...'
-                                }
-                                rows={1}
-                                onInput={e => {
-                                    e.target.style.height = 'auto';
-                                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                                }}
+                {/* Messages */}
+                <div className={s.messages}>
+                    <div className={s.messagesInner}>
+                        {messages.map((msg, i) => (
+                            <MessageBubble
+                                key={msg.id}
+                                msg={msg}
+                                prevMsg={messages[i - 1]}
                             />
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+                </div>
+
+                {/* Input bar */}
+                <div className={s.inputBar}>
+                    <div className={s.inputInner}>
+
+                        {imagePreview && (
+                            <div className={s.imagePreviewStrip}>
+                                <img src={imagePreview} alt="preview" className={s.imagePreviewThumb} />
+                                <div className={s.imagePreviewInfo}>
+                                    <div className={s.imagePreviewName}>{imageFile?.name}</div>
+                                    <div className={s.imagePreviewSub}>Ready to send</div>
+                                </div>
+                                <button className={s.clearImageBtn} onClick={clearImage}>✕</button>
+                            </div>
+                        )}
+
+                        <div className={s.inputRow}>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                style={{ display: 'none' }}
+                            />
+                            <button
+                                className={`${s.cameraBtn} ${imagePreview ? s.cameraBtnActive : ''}`}
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={resolved}
+                                title="Upload dashboard image"
+                            >
+                                📷
+                            </button>
+
+                            <div className={`${s.textareaWrap} ${focused ? s.textareaWrapFocused : ''}`}>
+                                <textarea
+                                    ref={el => { inputRef.current = el; textareaRef.current = el; }}
+                                    className={s.textarea}
+                                    value={input}
+                                    onChange={e => setInput(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    onFocus={() => setFocused(true)}
+                                    onBlur={() => setFocused(false)}
+                                    disabled={sending || resolved}
+                                    placeholder={
+                                        resolved  ? 'This chat is resolved' :
+                                            imageFile ? 'Add a description (optional)...' :
+                                                'Describe your issue or upload a warning light image...'
+                                    }
+                                    rows={1}
+                                    onInput={e => {
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                                    }}
+                                />
+                            </div>
+
+                            <button
+                                className={`${s.sendBtn} ${canSend ? s.sendBtnActive : ''}`}
+                                onClick={handleSend}
+                                disabled={!canSend}
+                            >
+                                {sending ? <span className={s.sendSpinner} /> : '↑'}
+                            </button>
                         </div>
 
-                        <button
-                            className={`${s.sendBtn} ${canSend ? s.sendBtnActive : ''}`}
-                            onClick={handleSend}
-                            disabled={!canSend}
-                        >
-                            {sending ? <span className={s.sendSpinner} /> : '↑'}
-                        </button>
+                        <p className={s.footer}>Powered by Groq AI · For informational purposes only</p>
                     </div>
-
-                    <p className={s.footer}>Powered by Groq AI · For informational purposes only</p>
                 </div>
             </div>
 
@@ -337,42 +385,25 @@ function ResourceLinks({ links }) {
                     <div className={s.resourceSectionTitle}>📹 Repair Videos</div>
                     <div className={s.resourceList}>
                         {youtubeLinks.map((link, i) => (
-                            <a
-                                key={i}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={s.resourceLink}
-                                data-type="youtube"
-                            >
+                            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                               className={s.resourceLink} data-type="youtube">
                                 <span className={s.resourceLinkIcon}>▶</span>
-                                <span className={s.resourceLinkLabel}>
-                                    {link.label.replace('🎥 ', '')}
-                                </span>
+                                <span className={s.resourceLinkLabel}>{link.label.replace('🎥 ', '')}</span>
                                 <span className={s.resourceLinkArrow}>↗</span>
                             </a>
                         ))}
                     </div>
                 </div>
             )}
-
             {partsLinks.length > 0 && (
                 <div className={s.resourceSection}>
                     <div className={s.resourceSectionTitle}>🛒 Find Parts</div>
                     <div className={s.resourceList}>
                         {partsLinks.map((link, i) => (
-                            <a
-                                key={i}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={s.resourceLink}
-                                data-type="parts"
-                            >
+                            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                               className={s.resourceLink} data-type="parts">
                                 <span className={s.resourceLinkIcon}>🔩</span>
-                                <span className={s.resourceLinkLabel}>
-                                    {link.label.replace('🛒 Buy: ', '')}
-                                </span>
+                                <span className={s.resourceLinkLabel}>{link.label.replace('🛒 Buy: ', '')}</span>
                                 <span className={s.resourceLinkArrow}>↗</span>
                             </a>
                         ))}
@@ -390,6 +421,10 @@ function MessageBubble({ msg, prevMsg }) {
     const showAvatar = !prevMsg || prevMsg.role !== msg.role;
     const severity   = isBot && !isTyping ? parseSeverity(msg.content) : null;
 
+    // Check if this is a short onboarding question (brand/model/year/problem)
+    const isQuestion = isBot && !isTyping && isOnboardingQuestion(msg.content);
+    const stepConfig = isQuestion ? getOnboardingStep(msg.content) : null;
+
     const rowClass = [
         s.bubbleRow,
         isBot ? s.bubbleRowBot : s.bubbleRowUser,
@@ -404,6 +439,40 @@ function MessageBubble({ msg, prevMsg }) {
             : (showAvatar ? s.radiusUserFirst : s.radiusUserOther),
     ].join(' ');
 
+    // ── Onboarding question card ──────────────────────────────────────────
+    if (isQuestion && stepConfig) {
+        return (
+            <div className={rowClass}>
+                {/* Avatar */}
+                <div className={`${s.botAvatar} ${showAvatar ? '' : s.botAvatarHidden}`}
+                     style={{ background: `linear-gradient(135deg, ${stepConfig.accent}cc, ${stepConfig.accent}88)` }}>
+                    🔧
+                </div>
+
+                <div className={s.bubbleContainer}>
+                    {/* Attractive question card */}
+                    <div className={s.questionCard} style={{ '--qaccent': stepConfig.accent }}>
+
+                        {/* Top row: icon + step label */}
+                        <div className={s.questionCardTop}>
+                            <div className={s.questionCardIcon}>{stepConfig.icon}</div>
+                            {stepConfig.label && (
+                                <span className={s.questionCardStep}>{stepConfig.label}</span>
+                            )}
+                        </div>
+
+                        {/* Message text */}
+                        <p className={s.questionCardText}>{msg.content}</p>
+
+                        {/* Decorative bottom accent line */}
+                        <div className={s.questionCardBar} />
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Normal bubble (diagnosis, follow-ups, user messages) ─────────────
     return (
         <div className={rowClass}>
             {isBot && (
