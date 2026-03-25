@@ -16,19 +16,20 @@ export default function ChatPage() {
 }
 
 function ChatLayout() {
-    const { id } = useParams();
+    // ✅ FIX 1: Read 'uuid' instead of 'id' (rename folder to /chat/[uuid]/ too)
+    const { uuid } = useParams();
     const [mobileOpen, setMobileOpen] = useState(false);
     const closeMobile = useCallback(() => setMobileOpen(false), []);
 
     return (
         <div className={s.shell}>
             <Sidebar
-                activeChatId={id}
+                activeChatId={uuid}  // ✅ FIX 2: pass uuid
                 mobileOpen={mobileOpen}
                 onMobileClose={closeMobile}
             />
             <div className={s.chatShell}>
-                <Chat id={id} onOpenMenu={() => setMobileOpen(true)} />
+                <Chat id={uuid} onOpenMenu={() => setMobileOpen(true)} />  {/* ✅ FIX 3: pass uuid as id prop */}
             </div>
             <AdBanner slot="vertical" />
         </div>
@@ -91,8 +92,9 @@ function Chat({ id, onOpenMenu }) {
     useEffect(() => { scrollToBottom(); }, [messages]);
 
     const loadChat = async () => {
+        if (!id) return; // ✅ FIX 4: guard against undefined id
         try {
-            const res = await getChat(id);
+            const res = await getChat(id); // id is now a uuid string
             setChat(res.data.chat);
             setMessages(res.data.messages);
         } catch {
@@ -149,7 +151,9 @@ function Chat({ id, onOpenMenu }) {
 
         try {
             const imageBase64 = capturedFile && capturedPreview ? capturedPreview.split(',')[1] : null;
-            const res = await sendMessage(parseInt(id), content, imageBase64, capturedFile?.type);
+
+            // ✅ FIX 5: Pass id directly — it's already a uuid string, NO parseInt()
+            const res = await sendMessage(id, content, imageBase64, capturedFile?.type);
             const { userMessage, botMessage } = res.data;
 
             setMessages(prev =>
@@ -159,7 +163,7 @@ function Chat({ id, onOpenMenu }) {
                         botMessage,
                     ])
             );
-            const chatRes = await getChat(id);
+            const chatRes = await getChat(id); // ✅ uuid string
             setChat(chatRes.data.chat);
 
         } catch (err) {
@@ -182,7 +186,7 @@ function Chat({ id, onOpenMenu }) {
 
     const handleResolve = async () => {
         try {
-            const res = await resolveChat(id);
+            const res = await resolveChat(id); // ✅ uuid string
             setChat(res.data.chat);
             toast.success('Marked as resolved!');
         } catch { toast.error('Failed to resolve'); }
@@ -203,7 +207,6 @@ function Chat({ id, onOpenMenu }) {
             {/* ── Fixed Header ── */}
             <header className={s.header}>
                 <div className={s.headerLeft}>
-                    {/* Hamburger — only visible on mobile via CSS */}
                     <button
                         className={s.menuBtn}
                         onClick={onOpenMenu}
