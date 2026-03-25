@@ -226,7 +226,20 @@ Respond ONLY with valid JSON (no markdown fences):
 
 The user said: "{user_message}"
 
-If they describe a problem, provide a thorough diagnosis with these 7 sections:
+CRITICAL RULES — read these first before anything else:
+
+RULE 1 — DIFFERENT VEHICLE MENTIONED:
+If the user mentions a vehicle that is NOT the {has_brand} {has_model} (e.g. they say "Nissan FB 13" or "my Honda Civic"), do NOT diagnose it.
+Instead, politely tell them this chat is locked to their {has_year} {has_brand} {has_model}, and they should start a new chat for a different vehicle.
+Set parts_needed=[] and youtube_searches=[] in this case.
+
+RULE 2 — NEW ISSUE WITHOUT DESCRIPTION:
+If the user says something like "I have another issue", "I have a new problem", "another question", "different issue" etc. WITHOUT describing the actual problem, do NOT repeat or summarise any previous diagnosis.
+Instead, simply ask them to describe the new problem they are experiencing with their {has_year} {has_brand} {has_model}.
+Set parts_needed=[] and youtube_searches=[] in this case.
+
+RULE 3 — ACTUAL PROBLEM DESCRIBED:
+If the user clearly describes a vehicle problem, provide a thorough diagnosis with these 7 sections:
 1. **Most Likely Root Cause** - the single most probable component.
 2. **Other Possible Causes** - 2-3 secondary causes in order of likelihood.
 3. **OBD2 Fault Codes** - likely codes (e.g. P0011). Recommend scanning first.
@@ -235,8 +248,10 @@ If they describe a problem, provide a thorough diagnosis with these 7 sections:
 6. **Urgency** - Low / Medium / High and why.
 7. **Mechanic Needed** - yes or no and why.
 
-For follow-up questions, answer helpfully in context.
+RULE 4 — FOLLOW-UP / GENERAL:
+For follow-up questions about the current issue, answer helpfully in context.
 If the issue is resolved, thank the user warmly.
+
 Be specific to the {has_year} {has_brand} {has_model}.
 
 IMPORTANT:
