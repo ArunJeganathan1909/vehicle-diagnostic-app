@@ -98,21 +98,34 @@ function isOnboardingQuestion(content) {
 // Map onboarding messages to a step config for visual treatment
 function getOnboardingStep(content) {
     const lower = content.toLowerCase();
+
+    // Welcome — checked first
     if (lower.includes("hello") || lower.includes("i'm your vehicle") || lower.includes('vehicle diagnostic assistant')) {
         return { icon: '🚗', step: null, accent: '#6c63ff', label: 'Welcome' };
     }
-    if (lower.includes('brand')) {
-        return { icon: '🏷️', step: 1, accent: '#6c63ff', label: 'Step 1 of 4' };
-    }
-    if (lower.includes('model')) {
-        return { icon: '🔍', step: 2, accent: '#06b6d4', label: 'Step 2 of 4' };
-    }
+
+    // Step 3 — year / manufacturing checked BEFORE model, because confirmation
+    // messages like "I confirm your model is Corolla. What is the manufacturing year?"
+    // contain the word "model" but are asking about year → must be step 3.
     if (lower.includes('year') || lower.includes('manufacturing')) {
         return { icon: '📅', step: 3, accent: '#8b5cf6', label: 'Step 3 of 4' };
     }
+
+    // Step 1 — brand
+    if (lower.includes('brand')) {
+        return { icon: '🏷️', step: 1, accent: '#6c63ff', label: 'Step 1 of 4' };
+    }
+
+    // Step 2 — model (only reached when year/manufacturing not present)
+    if (lower.includes('model')) {
+        return { icon: '🔍', step: 2, accent: '#06b6d4', label: 'Step 2 of 4' };
+    }
+
+    // Step 4 — problem / issue
     if (lower.includes('problem') || lower.includes('issue') || lower.includes('experiencing') || lower.includes('describe')) {
         return { icon: '🔧', step: 4, accent: '#f59e0b', label: 'Step 4 of 4' };
     }
+
     return { icon: '💬', step: null, accent: '#6c63ff', label: null };
 }
 
@@ -439,6 +452,10 @@ function MessageBubble({ msg, prevMsg }) {
 
     // ── Onboarding question card ──────────────────────────────────────────
     if (isQuestion && stepConfig) {
+        // Build step dots (4 steps total, or null for welcome)
+        const totalSteps = 4;
+        const currentStep = stepConfig.step;
+
         return (
             <div className={rowClass}>
                 {/* Avatar */}
@@ -448,21 +465,37 @@ function MessageBubble({ msg, prevMsg }) {
                 </div>
 
                 <div className={s.bubbleContainer}>
-                    {/* Attractive question card */}
                     <div className={s.questionCard} style={{ '--qaccent': stepConfig.accent }}>
 
-                        {/* Top row: icon + step label */}
+                        {/* Top row: icon+label on left, step dots on right */}
                         <div className={s.questionCardTop}>
-                            <div className={s.questionCardIcon}>{stepConfig.icon}</div>
-                            {stepConfig.label && (
-                                <span className={s.questionCardStep}>{stepConfig.label}</span>
+                            <div className={s.questionCardTopLeft}>
+                                <div className={s.questionCardIcon}>{stepConfig.icon}</div>
+                                {stepConfig.label && (
+                                    <span className={s.questionCardStep}>{stepConfig.label}</span>
+                                )}
+                            </div>
+
+                            {/* Step progress dots — only shown for numbered steps */}
+                            {currentStep && (
+                                <div className={s.questionCardDots}>
+                                    {Array.from({ length: totalSteps }).map((_, i) => {
+                                        const dotStep = i + 1;
+                                        const cls = [
+                                            s.questionCardDot,
+                                            dotStep === currentStep ? s.questionCardDotActive :
+                                                dotStep  <  currentStep ? s.questionCardDotDone  : ''
+                                        ].filter(Boolean).join(' ');
+                                        return <span key={i} className={cls} />;
+                                    })}
+                                </div>
                             )}
                         </div>
 
                         {/* Message text */}
                         <p className={s.questionCardText}>{msg.content}</p>
 
-                        {/* Decorative bottom accent line */}
+                        {/* Decorative bottom accent bar */}
                         <div className={s.questionCardBar} />
                     </div>
                 </div>
